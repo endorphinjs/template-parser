@@ -93,15 +93,13 @@ function statement(scanner: Scanner, open: ParsedTag): ENDStatement {
     // `<if>` statement and remove directives
     for (let i = open.directives.length - 1; i >= 0; i--) {
         const dir = open.directives[i];
-        if (dir.prefix === prefix && dir.name.name === 'if') {
+        if (dir.prefix === prefix && dir.name === 'if') {
             assertExpression(scanner, dir);
             parents.push({
                 type: 'ENDIfStatement',
                 test: dir.value as Program,
                 consequent: [],
-                start: dir.name.start,
-                end: dir.value.end,
-                loc: dir.name.loc
+                loc: dir.loc
             });
         }
     }

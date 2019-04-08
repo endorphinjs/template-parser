@@ -1,5 +1,5 @@
 import Scanner from '../scanner';
-import { ENDVariableStatement, ENDVariable, ParsedTag } from '../../ast/template';
+import { ENDVariableStatement, ENDVariable, ParsedTag, ENDAttribute } from '../ast';
 import { emptyBody } from './utils';
 
 /**
@@ -8,8 +8,19 @@ import { emptyBody } from './utils';
  * @param openTag
  */
 export default function variableStatement(scanner: Scanner, openTag: ParsedTag): ENDVariableStatement {
-    const node = new ENDVariableStatement(openTag.attributes.map(attr => new ENDVariable(attr.name, attr.value)));
-    node.loc = openTag.loc;
     emptyBody(scanner, openTag);
-    return node;
+    return {
+        type: 'ENDVariableStatement',
+        variables: openTag.attributes.map(attrToVariable),
+        loc: openTag.loc
+    };
+}
+
+function attrToVariable(attr: ENDAttribute): ENDVariable {
+    return {
+        type: 'ENDVariable',
+        name: attr.name,
+        value: attr.value,
+        loc: attr.loc
+    };
 }

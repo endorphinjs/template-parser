@@ -1,4 +1,5 @@
-import { Position, Node } from 'acorn';
+import { Position } from 'acorn';
+import { Node } from './ast';
 
 export class ENDSyntaxError extends SyntaxError {
     readonly fileName: string | null;

@@ -1,12 +1,12 @@
 import expression, { EXPRESSION_START } from './expression';
 import {
-    Identifier, Literal, Program, ExpressionStatement, LiteralValue, ENDAttribute,
+    Identifier, Literal, Program, LiteralValue, ENDAttribute,
     ENDAttributeValue, ParsedTag, ENDAttributeName, ENDAttributeValueExpression,
     ENDBaseAttributeValue, ENDDirective
 } from './ast';
-import { isWhiteSpace, isQuote, eatQuoted, isAlpha, isNumber, isSpace } from './utils';
+import { isWhiteSpace, isQuote, eatQuoted, isAlpha, isNumber, isSpace, identifier, literal } from './utils';
 import { prefix } from './elements/utils';
-import Scanner, { SourceData } from './scanner';
+import Scanner from './scanner';
 
 export const TAG_START = 60; // <
 export const TAG_END = 62; // >
@@ -262,7 +262,7 @@ function getDirective(attr: ENDAttribute): ENDDirective {
             const prefix = m[1];
             const { name, loc } = attr.name;
             const directiveId = identifier(name.slice(m[0].length), {
-                start: attr.name.start,
+                start: attr.name.start + m[0].length,
                 end: attr.name.end,
                 loc: {
                     ...loc,
@@ -273,7 +273,13 @@ function getDirective(attr: ENDAttribute): ENDDirective {
                 }
             });
 
-            return new ENDDirective(prefix, directiveId, attr.value);
+            return {
+                type: 'ENDDirective',
+                prefix,
+                name: directiveId.name,
+                value: attr.value,
+                loc: attr.name.loc
+            }
         }
     }
 }
@@ -282,11 +288,9 @@ function getDirective(attr: ENDAttribute): ENDDirective {
  * Detects if given expression is a single literal and returns it
  */
 function expandExpression(expr: Program): Program | Literal {
-    if (expr.body.length === 1 && expr.body[0] instanceof ExpressionStatement) {
-        const inner = expr.body[0] as ExpressionStatement;
-        if (inner.expression instanceof Literal) {
-            return inner.expression;
-        }
+    const inner = expr.body && expr.body[0];
+    if (inner && inner.type === 'ExpressionStatement' && inner.expression.type === 'Literal') {
+        return inner.expression;
     }
 
     return expr;
@@ -330,12 +334,4 @@ function createTag(scanner: Scanner, name: Identifier, tagType: 'open' | 'close'
         attributes: [],
         directives: [],
     });
-}
-
-function identifier(name: string, loc: SourceData): Identifier {
-    return { type: 'Identifier', name, ...loc };
-}
-
-function literal(value: LiteralValue, raw?: string, loc?: SourceData): Literal {
-    return { type: 'Literal', value,  raw, ...loc };
 }

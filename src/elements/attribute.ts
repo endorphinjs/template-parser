@@ -1,5 +1,5 @@
 import Scanner from '../scanner';
-import { ENDAttributeStatement, ParsedTag } from '../../ast/template';
+import { ENDAttributeStatement, ParsedTag } from '../ast';
 import { emptyBody, InnerStatement } from './utils';
 
 /**
@@ -9,8 +9,11 @@ import { emptyBody, InnerStatement } from './utils';
  */
 export default function attributeStatement(scanner: Scanner, openTag: ParsedTag, next?: InnerStatement): ENDAttributeStatement {
     // TODO extract class directives
-    const node = new ENDAttributeStatement(openTag.attributes, openTag.directives);
-    node.loc = openTag.loc;
     emptyBody(scanner, openTag);
-    return node;
+    return {
+        type: 'ENDAttributeStatement',
+        attributes: openTag.attributes,
+        directives: openTag.directives,
+        loc: openTag.loc
+    };
 }

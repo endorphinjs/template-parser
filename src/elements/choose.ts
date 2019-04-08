@@ -1,8 +1,7 @@
 import Scanner from "../scanner";
 import { openTag } from "../tag";
-import { ENDChooseStatement, ENDChooseCase, ParsedTag, ENDAttribute } from "../../ast/template";
-import { ignored, getControlName, tagBody, InnerStatement, closesTag, prefix, expectAttributeExpression } from "./utils";
-import { Program } from "../../ast/expression";
+import { ENDChooseStatement, Program, ParsedTag, ENDAttribute } from "../ast";
+import { ignored, getControlName, tagBody, InnerStatement, closesTag, prefix, expectAttributeExpression, tagName } from "./utils";
 
 /**
  * Consumes <choose> statement
@@ -14,21 +13,24 @@ export default function chooseStatement(scanner: Scanner, open: ParsedTag, next:
         return;
     }
 
-    const chooseStatement = new ENDChooseStatement();
-    chooseStatement.loc = open.loc;
+    const chooseStatement: ENDChooseStatement = {
+        type: 'ENDChooseStatement',
+        cases: [],
+        loc: open.loc
+    };
     let finished = false;
     let tagEntry: ParsedTag;
 
     while (!scanner.eof() && !closesTag(scanner, open)) {
         // Accept <when> and <otherwise> statements only
         if (tagEntry = openTag(scanner)) {
-            const name = getControlName(tagEntry.getName());
+            const name = getControlName(tagName(tagEntry));
             if (name !== 'when' && name !== 'otherwise') {
-                throw scanner.error(`Unexpected <${tagEntry.getName()}> tag, expecting <${prefix}:when> or <${prefix}:otherwise>`, tagEntry);
+                throw scanner.error(`Unexpected <${tagName(tagEntry)}> tag, expecting <${prefix}:when> or <${prefix}:otherwise>`, tagEntry);
             }
 
             if (finished) {
-                throw scanner.error(`Unexpected <${tagEntry.getName()}> after <${prefix}:otherwise>`, tagEntry);
+                throw scanner.error(`Unexpected <${tagName(tagEntry)}> after <${prefix}:otherwise>`, tagEntry);
             }
 
             let test: ENDAttribute;
@@ -38,10 +40,12 @@ export default function chooseStatement(scanner: Scanner, open: ParsedTag, next:
                 finished = true;
             }
 
-            const chooseCase = new ENDChooseCase(test && (test.value as Program));
-            chooseCase.loc = tagEntry.loc;
-            tagBody(scanner, tagEntry, chooseCase.consequent, next);
-            chooseStatement.cases.push(chooseCase);
+            chooseStatement.cases.push({
+                type: 'ENDChooseCase',
+                test: test && (test.value as Program),
+                consequent: tagBody(scanner, tagEntry, next),
+                loc: tagEntry.loc
+            });
         } else if (!ignored(scanner, true)) {
             throw scanner.error('Unexpected token');
         }

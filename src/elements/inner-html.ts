@@ -1,8 +1,7 @@
-import Scanner from './scanner';
-import { ENDInnerHTML } from '../ast/template';
-import parseJS from './expression/js-parser';
-import { EXPRESSION_START, EXPRESSION_END } from './expression';
-import { eatQuoted, ESCAPE } from './utils';
+import Scanner from '../scanner';
+import { ENDInnerHTML } from '../ast';
+import { EXPRESSION_START, EXPRESSION_END, parseJS } from '../expression';
+import { eatQuoted, ESCAPE } from '../utils';
 
 /**
  * Consumes inner HTML expression
@@ -28,8 +27,11 @@ export default function innerHTML(scanner: Scanner): ENDInnerHTML {
                 if (!stack) {
                     // Expecting the end of inner HTML expression
                     if (scanner.eat(EXPRESSION_END)) {
-                        const expr = parseJS(scanner.substring(start + 2, scanner.pos - 2), scanner);
-                        return scanner.astNode(new ENDInnerHTML(expr), start);
+                        return {
+                            type: 'ENDInnerHTML',
+                            value: parseJS(scanner.substring(start + 2, scanner.pos - 2), scanner),
+                            ...scanner.loc(start)
+                        }
                     } else {
                         throw scanner.error(`Expecting ${String.fromCharCode(EXPRESSION_END).repeat(2)} at the end of inner HTML expression`);
                     }

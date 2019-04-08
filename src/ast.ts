@@ -51,7 +51,7 @@ export interface Identifier extends JSNode {
     name: string;
 
     // Endorphin extension: identifier context
-    context: 'property' | 'state' | 'variable' | 'store' | 'helper';
+    context?: 'property' | 'state' | 'variable' | 'store' | 'helper';
 }
 
 export interface ThisExpression extends JSNode {
@@ -197,7 +197,7 @@ export interface ENDNode extends Node { }
 export type ENDStatement = ENDElement | ENDInnerHTML | ENDPlainStatement | ENDAttributeStatement | ENDAddClassStatement | ENDVariableStatement | ENDControlStatement | ENDPartialStatement;
 export type ENDProgramStatement = ENDTemplate | ENDPartial | ENDImport | ENDStatement;
 export type ENDControlStatement = ENDIfStatement | ENDChooseStatement | ENDForEachStatement | ENDPartialStatement;
-export type ENDPlainStatement = ENDText | Program;
+export type ENDPlainStatement = Literal | Program;
 export type ENDAttributeName = Identifier | Program;
 export type ENDBaseAttributeValue = Literal | Program;
 export type ENDAttributeValue = ENDBaseAttributeValue | ENDAttributeValueExpression | null;
@@ -217,8 +217,8 @@ export interface ENDTemplate extends ENDNode {
 
 export interface ENDPartial extends ENDNode {
     type: 'ENDPartial';
+    id: string;
     body: ENDStatement[];
-    id: Identifier;
     params: ENDAttribute[];
 }
 
@@ -239,7 +239,7 @@ export interface ENDAttribute extends ENDNode {
 export interface ENDDirective extends ENDNode {
     type: 'ENDDirective';
     prefix: string;
-    name: Identifier;
+    name: string;
     value: ENDAttributeValue;
 }
 
@@ -262,7 +262,13 @@ export interface ENDIfStatement extends ENDNode {
 
 export interface ENDChooseStatement extends ENDNode {
     type: 'ENDChooseStatement';
-    cases: ENDIfStatement[];
+    cases: ENDChooseCase[];
+}
+
+export interface ENDChooseCase extends ENDNode {
+    type: 'ENDChooseCase';
+    test: Program | null;
+    consequent: ENDStatement[];
 }
 
 export interface ENDForEachStatement extends ENDNode {
@@ -294,11 +300,6 @@ export interface ENDAddClassStatement extends ENDNode {
     tokens: ENDPlainStatement[];
 }
 
-export interface ENDText extends ENDNode {
-    type: 'ENDText';
-    value: string;
-}
-
 export interface ENDInnerHTML extends ENDNode {
     type: 'ENDInnerHTML';
     value: Program;
@@ -314,7 +315,7 @@ export interface ENDStylesheet extends ENDNode {
     type: 'ENDStylesheet';
     mime: string;
     transformed?: string;
-    content?: ENDText;
+    content?: string;
     url?: string;
 }
 
@@ -322,7 +323,7 @@ export interface ENDScript extends ENDNode {
     type: 'ENDScript';
     transformed?: string;
     mime: string;
-    content?: ENDText;
+    content?: string;
     url?: string;
 }
 

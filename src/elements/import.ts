@@ -1,7 +1,6 @@
 import { basename, dirname, extname } from 'path';
 import Scanner from '../scanner';
-import { ParsedTag, ENDImport, ENDAttribute } from '../../ast/template';
-import { Literal } from '../../ast/expression';
+import { Literal, ParsedTag, ENDImport, ENDAttribute } from '../ast';
 import { expectAttributeLiteral, emptyBody, getAttr, assertLiteral } from './utils';
 
 export default function importStatement(scanner: Scanner, openTag: ParsedTag): ENDImport {
@@ -19,11 +18,13 @@ export default function importStatement(scanner: Scanner, openTag: ParsedTag): E
         tagName = fileName.includes('-') ? fileName : basename(dirname(href));
     }
 
-    const node = new ENDImport(tagName, href);
-    node.loc = openTag.loc;
     emptyBody(scanner, openTag);
-
-    return node;
+    return {
+        type: 'ENDImport',
+        name: tagName,
+        href,
+        loc: openTag.loc
+    };
 }
 
 function stringValue(attr: ENDAttribute): string {

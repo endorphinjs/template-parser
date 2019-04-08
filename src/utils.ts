@@ -1,8 +1,37 @@
-import Scanner, { MatchFunction } from './scanner';
+import Scanner, { MatchFunction, SourceData } from './scanner';
+import { Identifier, LiteralValue, Literal, Node } from './ast';
 
 export const SINGLE_QUOTE = 39; // '
 export const DOUBLE_QUOTE = 34; // "
 export const ESCAPE = 92; // \
+
+/**
+ * Factory function for creating `Identifier` AST node
+ */
+export function identifier(name: string, loc: SourceData): Identifier {
+    return { type: 'Identifier', name, ...loc };
+}
+
+/**
+ * Factory function for creating `Literal` AST node
+ */
+export function literal(value: LiteralValue, raw?: string, loc?: SourceData): Literal {
+    return { type: 'Literal', value, raw, ...loc };
+}
+
+/**
+ * Check if given node is `Identifier`
+ */
+export function isIdentifier(node?: Node): node is Identifier {
+    return node && node.type === 'Identifier';
+}
+
+/**
+ * Check if given node is `Literal`
+ */
+export function isLiteral(node?: Node): node is Literal {
+    return node && node.type === 'Literal';
+}
 
 /**
  * Tries to consume content from given stream that matches `fn` test. If consumed,

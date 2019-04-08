@@ -1,7 +1,6 @@
 import Scanner from "../scanner";
-import { ENDForEachStatement, ParsedTag } from "../../ast/template";
+import { ENDForEachStatement, ParsedTag, Program } from "../ast";
 import { getAttr, tagBody, InnerStatement, expectAttributeExpression, assertExpression } from "./utils";
-import { Program } from "../../ast/expression";
 
 /**
  * Consumes <for-each> statement
@@ -16,8 +15,11 @@ export default function forEachStatement(scanner: Scanner, openTag: ParsedTag, n
     }
 
     // TODO parse attributes for internal variables
-    const node = new ENDForEachStatement(select.value as Program, key ? key.value as Program : null);
-    node.loc = openTag.loc;
-    tagBody(scanner, openTag, node.body, next);
-    return node;
+    return {
+        type: 'ENDForEachStatement',
+        select: select.value as Program,
+        key: key ? key.value as Program : null,
+        body: tagBody(scanner, openTag, next),
+        loc: openTag.loc
+    };
 }

@@ -1,8 +1,6 @@
 import Scanner from '../scanner';
-import { toCharCodes, eatSection, isSpace } from '../utils';
-import { Identifier, Program, Literal, LiteralValue } from '../../ast/expression';
-import { ENDStatement, ENDAttribute, ParsedTag, ENDText, ENDElement, ENDAttributeStatement } from '../../ast/template';
-import { Node } from '../../ast/base';
+import { toCharCodes, eatSection, isSpace, literal, isLiteral, isIdentifier } from '../utils';
+import { LiteralValue, ENDStatement, ENDAttribute, ParsedTag, ENDElement, ENDAttributeStatement, Node, Literal, ENDDirective } from '../ast';
 import { closeTag, openTag } from '../tag';
 import text from '../text';
 import expression from '../expression';
@@ -29,7 +27,7 @@ export interface InnerStatement {
 /**
  * Consumes tag content from given scanner into `body` argument
  */
-export function tagBody(scanner: Scanner, open: ParsedTag, body: ENDStatement[], consumeTag?: InnerStatement): void {
+export function tagBody(scanner: Scanner, open: ParsedTag, consumeTag?: InnerStatement, body: ENDStatement[] = []): ENDStatement[] {
     if (open.selfClosing) {
         // Nothing to consume in self-closing tag
         return;
@@ -59,7 +57,8 @@ export function tagBody(scanner: Scanner, open: ParsedTag, body: ENDStatement[],
             items.push(token);
         } else if (token = text(scanner)) {
             // Skip formatting tokens: a whitespace-only text token with new lines
-            if (!/^\s+$/.test(token.value) || !/[\r\n]/.test(token.value)) {
+            const value = String(token.value);
+            if (!/^\s+$/.test(value) || !/[\r\n]/.test(value)) {
                 items.push(token);
             }
         } else if (!ignored(scanner)) {
@@ -69,17 +68,18 @@ export function tagBody(scanner: Scanner, open: ParsedTag, body: ENDStatement[],
 
     // If we reached here then most likely we have unclosed tags
     if (tagStack.length) {
-        throw scanner.error(`Expecting </${tagStack.pop().getName()}>`);
+        throw scanner.error(`Expecting </${tagName(tagStack.pop())}>`);
     }
 
     finalizeTagBody(body, items);
+    return body;
 }
 
 /**
  * Consumes contents of given tag as text, e.g. parses it until it reaches closing
  * tag that matches `open`.
  */
-export function tagText(scanner: Scanner, open: ParsedTag): ENDText {
+export function tagText(scanner: Scanner, open: ParsedTag): Literal {
     if (open.selfClosing) {
         // Nothing to consume in self-closing tag
         return;
@@ -91,8 +91,8 @@ export function tagText(scanner: Scanner, open: ParsedTag): ENDText {
     while (!scanner.eof()) {
         end = scanner.pos;
         if (close = closeTag(scanner)) {
-            if (close.getName() === open.getName()) {
-                return scanner.astNode(new ENDText(scanner.substring(start, end)), start, end);
+            if (tagName(close) === tagName(open)) {
+                return literal(scanner.substring(start, end), null, scanner.loc(start, end));
             }
         } else {
             scanner.pos++
@@ -100,7 +100,14 @@ export function tagText(scanner: Scanner, open: ParsedTag): ENDText {
     }
 
     // If we reached here then most likely we have unclosed tags
-    throw scanner.error(`Expecting </${open.getName()}>`);
+    throw scanner.error(`Expecting </${tagName(open)}>`);
+}
+
+/**
+ * Returns name of given parsed tag
+ */
+export function tagName(tag: ParsedTag): string {
+    return tag.name.name;
 }
 
 /**
@@ -117,7 +124,7 @@ export function emptyBody(scanner: Scanner, open: ParsedTag): void {
 
     while (!scanner.eof() && !closesTag(scanner, open)) {
         if (!ignored(scanner)) {
-            throw scanner.error(`Unexpected token, tag <${open.getName()}> must be empty`);
+            throw scanner.error(`Unexpected token, tag <${tagName(open)}> must be empty`);
         }
     }
 }
@@ -129,11 +136,11 @@ export function closesTag(scanner: Scanner, open: ParsedTag): boolean {
     const pos = scanner.pos;
     const close = closeTag(scanner);
     if (close) {
-        if (close.getName() === open.getName()) {
+        if (tagName(close) === tagName(open)) {
             return true;
         }
 
-        throw scanner.error(`Unexpected closing tag </${close.getName()}>, expecting </${open.getName()}>`, pos);
+        throw scanner.error(`Unexpected closing tag </${tagName(close)}>, expecting </${tagName(open)}>`, pos);
     }
 
     return false;
@@ -169,7 +176,7 @@ export function getControlName(name: string): string {
  * Returns attribute with given name from tag name definition, if any
  */
 export function getAttr(elem: ParsedTag | ENDElement | ENDAttributeStatement, name: string): ENDAttribute {
-    return elem.attributes.find(attr => attr.name instanceof Identifier && attr.name.name === name);
+    return elem.attributes.find(attr => isIdentifier(attr.name) && attr.name.name === name);
 }
 
 /**
@@ -177,7 +184,7 @@ export function getAttr(elem: ParsedTag | ENDElement | ENDAttributeStatement, na
  */
 export function getAttrValue(openTag: ParsedTag | ENDElement | ENDAttributeStatement, name: string): LiteralValue {
     const attr = getAttr(openTag, name);
-    if (attr && attr.value instanceof Literal) {
+    if (attr && isLiteral(attr.value)) {
         return attr.value.value;
     }
 }
@@ -185,22 +192,22 @@ export function getAttrValue(openTag: ParsedTag | ENDElement | ENDAttributeState
 /**
  * Returns value of attribute with given name from tag name definition, if any
  */
-export function getAttrValueIfLiteral(openTag: ParsedTag, name: string): string | number | boolean {
+export function getAttrValueIfLiteral(openTag: ParsedTag, name: string): LiteralValue {
     const attr = getAttr(openTag, name);
     if (attr) {
-        if (attr.value instanceof Literal) {
+        if (isLiteral(attr.value)) {
             return attr.value.value;
         }
 
-        throw new ENDCompileError(`Expecting literal value of ${name} attribute in <${openTag.getName()}> tag`, attr.value);
+        throw new ENDCompileError(`Expecting literal value of ${name} attribute in <${tagName(openTag)}> tag`, attr.value);
     }
 }
 
 /**
  * Returns directive with given prefix and name from tag name definition, if any
  */
-export function getDirective(openTag: ParsedTag, prefix: string, name?: string): ENDAttribute {
-    return openTag.directives.find(dir => dir.prefix === prefix && (!name || dir.name.name === name));
+export function getDirective(openTag: ParsedTag, prefix: string, name?: string): ENDDirective {
+    return openTag.directives.find(dir => dir.prefix === prefix && (!name || dir.name === name));
 }
 
 /**
@@ -208,7 +215,7 @@ export function getDirective(openTag: ParsedTag, prefix: string, name?: string):
  * except ones that have special meaning to Endorphin compiler
  */
 export function getAttributes(tag: ParsedTag): ENDAttribute[] {
-    return tag.attributes.filter(attr => attr.name instanceof Identifier ? !attr.name.name.startsWith(nsPrefix) : true);
+    return tag.attributes.filter(attr => isIdentifier(attr.name) ? !attr.name.name.startsWith(nsPrefix) : true);
 }
 
 /**
@@ -218,7 +225,7 @@ export function getAttributes(tag: ParsedTag): ENDAttribute[] {
 export function expectAttribute(scanner: Scanner, tag: ParsedTag, name: string): ENDAttribute {
     const attr = getAttr(tag, name);
     if (!attr) {
-        throw scanner.error(`Expecting "${name}" attribute in <${tag.getName()}> element`, tag);
+        throw scanner.error(`Expecting "${name}" attribute in <${tagName(tag)}> element`, tag);
     }
 
     return attr;
@@ -239,9 +246,15 @@ export function expectAttributeLiteral(scanner: Scanner, tag: ParsedTag, name: s
 /**
  * Check if value of given attribute is an expression. If not, throws exception
  */
-export function assertExpression(scanner: Scanner, attr: ENDAttribute): void {
-    if (!(attr.value instanceof Program)) {
-        const attrName: string = attr.name instanceof Identifier ? attr.name.name : null;
+export function assertExpression(scanner: Scanner, attr: ENDAttribute | ENDDirective): void {
+    if (attr.value.type !== 'Program') {
+        let attrName: string;
+        if (attr.type === 'ENDDirective') {
+            attrName = `${attr.prefix}:${attr.name}`;
+        } else if (isIdentifier(attr.name)) {
+            attrName = attr.name.name;
+        }
+
         throw scanner.error(`Expecting expression as${attrName ? ` "${attrName}"` : ''} attribute value`, attr);
     }
 }
@@ -250,8 +263,8 @@ export function assertExpression(scanner: Scanner, attr: ENDAttribute): void {
  * Check if value of given attribute is a literal. If not, throws exception
  */
 export function assertLiteral(scanner: Scanner, attr: ENDAttribute): void {
-    if (!(attr.value instanceof Literal)) {
-        const attrName: string = attr.name instanceof Identifier ? attr.name.name : null;
+    if (!isLiteral(attr.value)) {
+        const attrName: string = isIdentifier(attr.name) ? attr.name.name : null;
         throw scanner.error(`Expecting string literal as${attrName ? ` "${attrName}"` : ''} attribute value`, attr);
     }
 }
@@ -268,7 +281,7 @@ function finalizeTagBody(parent: ENDStatement[], parsed: ENDStatement[]): void {
  */
 function removeFormatting(statements: ENDStatement[]): ENDStatement[] {
     return statements.filter((node, i) => {
-        if (node instanceof ENDText && /[\r\n]/.test(node.value) && /^\s+$/.test(node.value)) {
+        if (isLiteral(node) && /[\r\n]/.test(String(node.value)) && /^\s+$/.test(String(node.value))) {
             // Looks like insignificant white-space character, check if we can
             // remove it
             return isContentNode(statements[i - 1]) || isContentNode(statements[i + 1]);
@@ -279,5 +292,5 @@ function removeFormatting(statements: ENDStatement[]): ENDStatement[] {
 }
 
 function isContentNode(node: Node): boolean {
-    return node instanceof ENDText || node instanceof Program;
+    return isLiteral(node) || node.type === 'Program';
 }

@@ -1,7 +1,7 @@
 import Scanner from "../scanner";
-import { ENDElement, ParsedTag, ENDStatement, ENDAddClassStatement, ENDText, ENDIfStatement } from "../../ast/template";
+import { ENDElement, ParsedTag, ENDStatement, ENDAddClassStatement, ENDIfStatement, Program } from "../ast";
 import { tagBody, InnerStatement, assertExpression } from "./utils";
-import { Program } from "../../ast/expression";
+import { literal } from "../utils";
 
 /**
  * Consumes regular output element
@@ -10,9 +10,14 @@ import { Program } from "../../ast/expression";
  */
 export default function elementStatement(scanner: Scanner, openTag: ParsedTag, next: InnerStatement): ENDStatement {
     // Consume as regular tag
-    const elem = new ENDElement(openTag.name, openTag.attributes, openTag.directives);
-    elem.loc = openTag.loc;
-    tagBody(scanner, openTag, elem.body, next);
+    const elem: ENDElement = {
+        type: 'ENDElement',
+        name: openTag.name,
+        attributes: openTag.attributes,
+        directives: openTag.directives,
+        body: tagBody(scanner, openTag, next),
+        loc: openTag.loc
+    }
 
     // Expand directives in parsed element: replaces some known directives with AST nodes
     let ctx: ENDStatement = elem;
@@ -22,18 +27,22 @@ export default function elementStatement(scanner: Scanner, openTag: ParsedTag, n
 
         if (dir.prefix === 'class') {
             // Expand `class:name={expr} directives
-            const className = new ENDText(dir.name.name);
-            className.loc = dir.name.loc;
-            const classStatement = new ENDAddClassStatement();
-            classStatement.loc = dir.loc;
-            classStatement.tokens.push(className);
+            const className = literal(dir.name);
+            className.loc = dir.loc;
+            const classStatement: ENDAddClassStatement = {
+                type: 'ENDAddClassStatement',
+                tokens: [className],
+                loc: dir.loc
+            };
 
             if (dir.value !== null) {
                 assertExpression(scanner, dir);
-                const ifStatement = new ENDIfStatement(dir.value as Program);
-                ifStatement.loc = dir.loc;
-                ifStatement.consequent.push(classStatement);
-                elem.body.unshift(ifStatement);
+                elem.body.unshift(<ENDIfStatement>{
+                    type: 'ENDIfStatement',
+                    test: dir.value as Program,
+                    consequent: [classStatement],
+                    loc: dir.loc
+                });
             } else {
                 elem.body.unshift(classStatement);
             }

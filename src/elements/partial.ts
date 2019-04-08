@@ -1,7 +1,7 @@
 import Scanner from "../scanner";
-import { Identifier } from "../../ast/expression";
-import { ENDPartialStatement, ParsedTag } from "../../ast/template";
-import { tagBody, getAttributes } from "./utils";
+import { ENDPartialStatement, ParsedTag } from "../ast";
+import { tagBody, getAttributes, tagName } from "./utils";
+import { identifier } from "../utils";
 
 const prefix = 'partial:';
 
@@ -11,14 +11,17 @@ const prefix = 'partial:';
  * @param openTag
  */
 export default function partialStatement(scanner: Scanner, openTag: ParsedTag): ENDPartialStatement {
-    const name = openTag.getName().slice(prefix.length);
-    const start = openTag.name.loc.start.pos;
-    const id = scanner.astNode(new Identifier(name), start + prefix.length, start + prefix.length + name.length);
+    const name = tagName(openTag).slice(prefix.length);
+    const start = openTag.name.loc.start.offset;
+    const id = identifier(name, scanner.loc(start + prefix.length, start + prefix.length + name.length));
 
     // Ignore partial content, if any
-    tagBody(scanner, openTag, []);
+    tagBody(scanner, openTag);
 
-    const partial = new ENDPartialStatement(id, getAttributes(openTag));
-    partial.loc = openTag.loc;
-    return partial;
+    return {
+        type: 'ENDPartialStatement',
+        id,
+        params: getAttributes(openTag),
+        loc: openTag.loc
+    };
 }

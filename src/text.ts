@@ -1,12 +1,12 @@
 import Scanner from './scanner';
-import { ENDText } from '../ast/template';
+import { Literal } from './ast';
 import { EXPRESSION_START } from './expression';
 import { TAG_START, TAG_CLOSE, nameStartChar } from './tag';
 
 /**
  * Consumes text token from given stream
  */
-export default function text(scanner: Scanner): ENDText {
+export default function text(scanner: Scanner): Literal {
     const start = scanner.pos;
     while (!scanner.eof() && !isTextBound(scanner)) {
         scanner.next();
@@ -14,7 +14,11 @@ export default function text(scanner: Scanner): ENDText {
 
     if (start !== scanner.pos) {
         scanner.start = start;
-        return scanner.astNode(new ENDText(scanner.current()));
+        return {
+            type: 'Literal',
+            value: scanner.current(),
+            ...scanner.loc()
+        }
     }
 }
 

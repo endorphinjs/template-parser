@@ -1,7 +1,9 @@
 import { Parser } from 'acorn';
 import endorphinParser from './acorn-plugin';
 import { Program, Identifier, Expression } from '../ast';
+import Scanner from '../scanner';
 import { ancestor as walk } from '../walk';
+import { eatPair } from '../utils';
 
 export const jsGlobals = new Set(['Math', 'String', 'Boolean', 'Object']);
 
@@ -20,13 +22,29 @@ interface ParserOptions {
     helpers?: string[];
 }
 
+export const EXPRESSION_START = 123; // {
+export const EXPRESSION_END = 125; // }
+
+/**
+ * Consumes expression from current stream location
+ */
+export default function expression(scanner: Scanner): Program {
+    if (eatPair(scanner, EXPRESSION_START, EXPRESSION_END)) {
+        scanner.start++;
+        const begin = scanner.start;
+        const end = scanner.pos - 1;
+
+        return parseJS(scanner.substring(begin, end), scanner);
+    }
+}
+
 /**
  * Parses given JS code into AST and prepares it for Endorphin expression evaluation
  * @param code Code to parse
  * @param scanner Code location inside parsed template
  * @param sourceFile Source file URL from which expression is parsed
  */
-export default function parse(code: string, options: ParserOptions = {}): Program {
+export function parseJS(code: string, options: ParserOptions = {}): Program {
     const ast = JSParser.parse(code, {
         sourceType: 'module',
         sourceFile: options.url,
@@ -106,15 +124,24 @@ function offsetPos(pos: acorn.Position, offset: OffsetInfo) {
     pos.line += offset.line;
 }
 
+/**
+ * Check if given identifier is a function argument
+ */
 function isFunctionArgument(id: Identifier, expr: Expression): boolean {
     return (expr.type === 'FunctionDeclaration' || expr.type === 'ArrowFunctionExpression')
         && expr.params.includes(id);
 }
 
+/**
+ * Check if given identifier is an object property
+ */
 function isProperty(id: Identifier, expr: Expression): boolean {
     return expr.type === 'MemberExpression' && expr.property === id;
 }
 
+/**
+ * Check if given identifier is a left part of assignment expression
+ */
 function isAssignment(id: Identifier, expr: Expression): boolean {
     return 'left' in expr && expr.left === id;
 }
