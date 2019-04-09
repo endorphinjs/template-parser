@@ -4,7 +4,7 @@ import {
     ENDAttributeValue, ParsedTag, ENDAttributeName, ENDAttributeValueExpression,
     ENDBaseAttributeValue, ENDDirective
 } from './ast';
-import { isWhiteSpace, isQuote, eatQuoted, isAlpha, isNumber, isSpace, identifier, literal } from './utils';
+import { isWhiteSpace, isQuote, eatQuoted, isAlpha, isNumber, isSpace, identifier, literal, isIdentifier } from './utils';
 import { prefix } from './elements/utils';
 import Scanner from './scanner';
 
@@ -47,12 +47,13 @@ export function openTag(scanner: Scanner): ParsedTag {
             attributes.forEach(attr => {
                 const directive = getDirective(attr);
                 if (directive) {
+                    validateDirective(directive, scanner);
                     tag.directives.push(directive);
                 } else {
                     // Validate some edge cases:
                     // * Currently, we do not support dynamic names in slots.
                     //   Make sure all slot names are literals
-                    const attrName = attr.name.type === 'Identifier' ? attr.name.name : null;
+                    const attrName = isIdentifier(attr.name) ? attr.name.name : null;
                     const shouldValidateSlot = attrName === (name.name === 'slot' ? 'name' : 'slot');
 
                     if (shouldValidateSlot && attr.value && attr.value.type !== 'Literal') {
@@ -154,12 +155,12 @@ function attribute(scanner: Scanner): ENDAttribute {
             value = scanner.expect(attributeValue, 'Expecting attribute value');
         }
 
-        return scanner.ast({
+        return {
             type: 'ENDAttribute',
             name,
             value,
-            start
-        } as ENDAttribute);
+            ...scanner.loc(start)
+        };
     }
 }
 
@@ -256,7 +257,7 @@ function isUnquoted(code: number): boolean {
  * directive token, returns `null` otherwise
  */
 function getDirective(attr: ENDAttribute): ENDDirective {
-    if (attr.name.type === 'Identifier') {
+    if (isIdentifier(attr.name)) {
         const m = attr.name.name.match(/^([\w-]+):/);
 
         if (m && directives.includes(m[1])) {
@@ -289,7 +290,7 @@ function getDirective(attr: ENDAttribute): ENDDirective {
  * Detects if given expression is a single literal and returns it
  */
 function expandExpression(expr: Program): Program | Literal {
-    const inner = expr.body && expr.body[0];
+    const inner = expr.body && expr.body.length === 1 && expr.body[0];
     if (inner && inner.type === 'ExpressionStatement' && inner.expression.type === 'Literal') {
         return inner.expression;
     }
@@ -330,12 +331,20 @@ function createTag(scanner: Scanner,
                    name: Identifier,
                    tagType: 'open' | 'close',
                    selfClosing: boolean = false): ParsedTag {
-    return scanner.ast({
+    return {
         type: 'ParsedTag',
         name,
         tagType,
         selfClosing,
         attributes: [],
         directives: [],
-    } as ParsedTag);
+        ...scanner.loc()
+    };
+}
+
+function validateDirective(dir: ENDDirective, scanner: Scanner): void {
+    // Make sure event is expression
+    if (dir.prefix === 'on' && dir.value.type !== 'Program') {
+        throw scanner.error(`Event handler must be expression`, dir.value);
+    }
 }

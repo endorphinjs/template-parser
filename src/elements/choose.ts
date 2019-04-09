@@ -16,7 +16,7 @@ export default function chooseStatement(scanner: Scanner, open: ParsedTag, next:
     const choose: ENDChooseStatement = {
         type: 'ENDChooseStatement',
         cases: [],
-        loc: open.loc
+        start: open.start
     };
     let finished = false;
     let tagEntry: ParsedTag;
@@ -44,12 +44,14 @@ export default function chooseStatement(scanner: Scanner, open: ParsedTag, next:
                 type: 'ENDChooseCase',
                 test: test && (test.value as Program),
                 consequent: tagBody(scanner, tagEntry, next),
-                loc: tagEntry.loc
+                ...scanner.loc(tagEntry.start)
             });
         } else if (!ignored(scanner, true)) {
             throw scanner.error('Unexpected token');
         }
     }
 
-    return choose;
+    choose.end = scanner.pos;
+
+    return scanner.ast(choose);
 }

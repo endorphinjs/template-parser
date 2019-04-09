@@ -1,23 +1,18 @@
-import { Parser } from 'acorn';
+import { Parser, Position } from 'acorn';
 import endorphinParser from './acorn-plugin';
-import { Program, Identifier, Expression } from '../ast';
+import { Program, Identifier, Expression, Node } from '../ast';
 import Scanner from '../scanner';
-import { walkAncestor as walk } from '../walk';
-import { eatPair } from '../utils';
+import { walkFullAncestor as walk } from '../walk';
+import { eatPair, isIdentifier } from '../utils';
+import { ENDSyntaxError } from '../syntax-error';
 
 export const jsGlobals = new Set(['Math', 'String', 'Boolean', 'Object']);
 
 // @ts-ignore
 const JSParser = Parser.extend(endorphinParser);
 
-interface OffsetInfo {
-    pos: number;
-    line: number;
-    column: number;
-}
-
 interface ParserOptions {
-    offset?: OffsetInfo;
+    offset?: Position;
     url?: string;
     helpers?: string[];
 }
@@ -34,7 +29,10 @@ export default function expression(scanner: Scanner): Program {
         const begin = scanner.start;
         const end = scanner.pos - 1;
 
-        return parseJS(scanner.substring(begin, end), scanner);
+        return parseJS(scanner.substring(begin, end), {
+            url: scanner.url,
+            offset: scanner.sourceLocation(begin)
+        });
     }
 }
 
@@ -45,25 +43,35 @@ export default function expression(scanner: Scanner): Program {
  * @param sourceFile Source file URL from which expression is parsed
  */
 export function parseJS(code: string, options: ParserOptions = {}): Program {
-    const ast = JSParser.parse(code, {
-        sourceType: 'module',
-        sourceFile: options.url,
-        locations: true,
-        onToken(tok) {
-            if (options.offset) {
-                tok.start += options.offset.pos;
-                tok.end += options.offset.pos;
-                if (tok.loc) {
-                    offsetPos(tok.loc.start, options.offset);
-                    offsetPos(tok.loc.end, options.offset);
-                }
-            }
+    let ast: Program;
+    try {
+        ast = JSParser.parse(code, {
+            sourceType: 'module',
+            sourceFile: options.url,
+            locations: true
+        }) as Program;
+    } catch (err) {
+        const message = err.message.replace(/\s*\(\d+:\d+\)$/, '');
+        const loc = { ...err.loc } as Position;
+        if (options.offset) {
+            offsetPos(loc, options.offset);
         }
-    }) as Program;
+        throw new ENDSyntaxError(message, options.url, loc, code);
+    }
 
     // Walk over AST and validate & upgrade nodes
-    walk(ast, {
-        Identifier(node: Identifier, state, ancestors) {
+    walk(ast, (node: Node, state, ancestors: Expression[]) => {
+        // Upgrade token locations
+        if (options.offset) {
+            node.start += options.offset.offset;
+            node.end += options.offset.offset;
+            if (node.loc) {
+                offsetPos(node.loc.start, options.offset);
+                offsetPos(node.loc.end, options.offset);
+            }
+        }
+
+        if (isIdentifier(node)) {
             if (jsGlobals.has(node.name) || isReserved(node, ancestors)) {
                 return;
             }
@@ -116,11 +124,15 @@ function isReserved(id: Identifier, ancestors: Expression[]): boolean {
     }
 }
 
-function offsetPos(pos: acorn.Position, offset: OffsetInfo) {
+function offsetPos(pos: Position, offset: Position): Position {
     if (pos.line === 1) {
         pos.column += offset.column;
     }
-    pos.line += offset.line;
+    pos.line += offset.line - 1;
+    if (typeof pos.offset === 'number') {
+        pos.offset += offset.offset;
+    }
+    return pos;
 }
 
 /**

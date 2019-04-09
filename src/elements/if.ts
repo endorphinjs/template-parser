@@ -14,6 +14,6 @@ export default function ifStatement(scanner: Scanner, openTag: ParsedTag, next: 
         type: 'ENDIfStatement',
         test: test.value as Program,
         consequent: tagBody(scanner, openTag, next),
-        loc: openTag.loc
+        ...scanner.loc(openTag.start)
     };
 }

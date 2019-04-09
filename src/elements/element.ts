@@ -16,7 +16,7 @@ export default function elementStatement(scanner: Scanner, openTag: ParsedTag, n
         attributes: openTag.attributes,
         directives: openTag.directives,
         body: tagBody(scanner, openTag, next),
-        loc: openTag.loc
+        ...scanner.loc(openTag.start)
     };
 
     // Expand directives in parsed element: replaces some known directives with AST nodes
@@ -32,7 +32,7 @@ export default function elementStatement(scanner: Scanner, openTag: ParsedTag, n
             const classStatement: ENDAddClassStatement = {
                 type: 'ENDAddClassStatement',
                 tokens: [className],
-                loc: dir.loc
+                ...scanner.loc(dir.start, dir.end)
             };
 
             if (dir.value !== null) {
@@ -41,7 +41,7 @@ export default function elementStatement(scanner: Scanner, openTag: ParsedTag, n
                     type: 'ENDIfStatement',
                     test: dir.value as Program,
                     consequent: [classStatement],
-                    loc: dir.loc
+                    ...scanner.loc(dir.start, dir.end)
                 } as ENDIfStatement);
             } else {
                 elem.body.unshift(classStatement);

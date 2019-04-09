@@ -15,13 +15,13 @@ export default function templateStatement(scanner: Scanner, openTag: ParsedTag, 
             id: partial.name,
             params: openTag.attributes,
             body,
-            loc: openTag.loc
+            ...scanner.loc(openTag.start)
         } as ENDPartial;
     }
 
     return {
         type: 'ENDTemplate',
         body,
-        loc: openTag.loc
+        ...scanner.loc(openTag.start)
     } as ENDTemplate;
 }

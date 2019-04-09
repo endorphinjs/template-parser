@@ -22,6 +22,6 @@ export default function partialStatement(scanner: Scanner, openTag: ParsedTag): 
         type: 'ENDPartialStatement',
         id,
         params: getAttributes(openTag),
-        loc: openTag.loc
+        ...scanner.loc(openTag.start)
     };
 }

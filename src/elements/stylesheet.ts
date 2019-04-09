@@ -13,7 +13,8 @@ export default function stylesheetStatement(scanner: Scanner, openTag: ParsedTag
         return {
             type: 'ENDStylesheet',
             mime: getMIME(openTag),
-            url: String(href.value).trim()
+            url: String(href.value).trim(),
+            ...scanner.loc(openTag.start)
         };
     }
 
@@ -24,7 +25,8 @@ export default function stylesheetStatement(scanner: Scanner, openTag: ParsedTag
             type: 'ENDStylesheet',
             mime: getMIME(openTag),
             content: String(text.value),
-            url: scanner.url
+            url: scanner.url,
+            ...scanner.loc(openTag.start)
         };
     }
 }

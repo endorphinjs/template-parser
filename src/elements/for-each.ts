@@ -20,6 +20,6 @@ export default function forEachStatement(scanner: Scanner, openTag: ParsedTag, n
         select: select.value as Program,
         key: key ? key.value as Program : null,
         body: tagBody(scanner, openTag, next),
-        loc: openTag.loc
+        ...scanner.loc(openTag.start)
     };
 }

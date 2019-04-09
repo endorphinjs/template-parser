@@ -15,7 +15,8 @@ export default function scriptStatement(scanner: Scanner, openTag: ParsedTag): E
             type: 'ENDScript',
             mime: mime ? String(mime) : defaultMIME,
             content: hasText ? String(text.value) : null,
-            url: src ? String(src) : scanner.url
+            url: src ? String(src) : scanner.url,
+            ...scanner.loc(openTag.start)
         };
     }
 }

@@ -23,7 +23,7 @@ export default function importStatement(scanner: Scanner, openTag: ParsedTag): E
         type: 'ENDImport',
         name: tagName,
         href,
-        loc: openTag.loc
+        ...scanner.loc(openTag.start)
     };
 }
 
