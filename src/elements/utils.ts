@@ -20,9 +20,7 @@ const piClose = toCharCodes('?>');
 export const prefix = 'e';
 const nsPrefix = prefix + ':';
 
-export interface InnerStatement {
-    (scanner: Scanner, openTag: ParsedTag, next?: InnerStatement): ENDStatement
-}
+export type InnerStatement = (scanner: Scanner, openTag: ParsedTag, next?: InnerStatement) => ENDStatement;
 
 /**
  * Consumes tag content from given scanner into `body` argument
@@ -86,7 +84,8 @@ export function tagText(scanner: Scanner, open: ParsedTag): Literal {
     }
 
     const start = scanner.pos;
-    let end: number, close: ParsedTag;
+    let end: number;
+    let close: ParsedTag;
 
     while (!scanner.eof()) {
         end = scanner.pos;
@@ -95,7 +94,7 @@ export function tagText(scanner: Scanner, open: ParsedTag): Literal {
                 return literal(scanner.substring(start, end), null, scanner.loc(start, end));
             }
         } else {
-            scanner.pos++
+            scanner.pos++;
         }
     }
 
@@ -182,8 +181,8 @@ export function getAttr(elem: ParsedTag | ENDElement | ENDAttributeStatement, na
 /**
  * Returns value of attribute with given name from tag name definition, if any
  */
-export function getAttrValue(openTag: ParsedTag | ENDElement | ENDAttributeStatement, name: string): LiteralValue {
-    const attr = getAttr(openTag, name);
+export function getAttrValue(tag: ParsedTag | ENDElement | ENDAttributeStatement, name: string): LiteralValue {
+    const attr = getAttr(tag, name);
     if (attr && isLiteral(attr.value)) {
         return attr.value.value;
     }
@@ -192,22 +191,22 @@ export function getAttrValue(openTag: ParsedTag | ENDElement | ENDAttributeState
 /**
  * Returns value of attribute with given name from tag name definition, if any
  */
-export function getAttrValueIfLiteral(openTag: ParsedTag, name: string): LiteralValue {
-    const attr = getAttr(openTag, name);
+export function getAttrValueIfLiteral(tag: ParsedTag, name: string): LiteralValue {
+    const attr = getAttr(tag, name);
     if (attr) {
         if (isLiteral(attr.value)) {
             return attr.value.value;
         }
 
-        throw new ENDCompileError(`Expecting literal value of ${name} attribute in <${tagName(openTag)}> tag`, attr.value);
+        throw new ENDCompileError(`Expecting literal value of ${name} attribute in <${tagName(tag)}> tag`, attr.value);
     }
 }
 
 /**
  * Returns directive with given prefix and name from tag name definition, if any
  */
-export function getDirective(openTag: ParsedTag, prefix: string, name?: string): ENDDirective {
-    return openTag.directives.find(dir => dir.prefix === prefix && (!name || dir.name === name));
+export function getDirective(tag: ParsedTag, dirPrefix: string, name?: string): ENDDirective {
+    return tag.directives.find(dir => dir.prefix === dirPrefix && (!name || dir.name === name));
 }
 
 /**

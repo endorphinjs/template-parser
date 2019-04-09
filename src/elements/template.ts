@@ -1,6 +1,6 @@
-import Scanner from "../scanner";
-import { ENDTemplate, ParsedTag, ENDPartial } from "../ast";
-import { InnerStatement, tagBody, getDirective } from "./utils";
+import Scanner from '../scanner';
+import { ENDTemplate, ParsedTag, ENDPartial } from '../ast';
+import { InnerStatement, tagBody, getDirective } from './utils';
 
 /**
  * Consumes top-level <template> statement
@@ -10,18 +10,18 @@ export default function templateStatement(scanner: Scanner, openTag: ParsedTag, 
     const partial = getDirective(openTag, 'partial');
 
     if (partial) {
-        return <ENDPartial>{
+        return {
             type: 'ENDPartial',
             id: partial.name,
             params: openTag.attributes,
             body,
             loc: openTag.loc
-        }
+        } as ENDPartial;
     }
 
-    return <ENDTemplate>{
+    return {
         type: 'ENDTemplate',
         body,
         loc: openTag.loc
-    }
+    } as ENDTemplate;
 }

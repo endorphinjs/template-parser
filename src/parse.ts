@@ -13,11 +13,14 @@ import variableStatement from './elements/variable';
 import importStatement from './elements/import';
 import stylesheetStatement from './elements/stylesheet';
 import scriptStatement from './elements/script';
-import { prefix, ignored, getControlName, InnerStatement, assertExpression, getAttrValueIfLiteral, tagText } from './elements/utils';
+import {
+    prefix, ignored, getControlName, InnerStatement, assertExpression,
+    getAttrValueIfLiteral, tagText
+} from './elements/utils';
 
 interface StatementMap {
-    [name: string]: InnerStatement
-};
+    [name: string]: InnerStatement;
+}
 
 const statements: StatementMap = {
     'attribute': attributeStatement,
@@ -34,7 +37,7 @@ const statements: StatementMap = {
  * @param text Template source
  * @param url Location of source, used for source mapping
  */
-export default function parseToAst(code: string, url?: string): ENDProgram {
+export default function parse(code: string, url?: string): ENDProgram {
     const scanner = new Scanner(code, url);
     const program: ENDProgram = {
         type: 'ENDProgram',
@@ -45,7 +48,7 @@ export default function parseToAst(code: string, url?: string): ENDProgram {
         start: 0,
         end: code.length
     };
-    let entry : ParsedTag;
+    let entry: ParsedTag;
 
     while (!scanner.eof()) {
         if (entry = openTag(scanner)) {
@@ -87,7 +90,7 @@ function statement(scanner: Scanner, open: ParsedTag): ENDStatement {
     const name = getName(open);
     const controlName = getControlName(name);
     let result: ENDStatement;
-    let parents: ENDIfStatement[] = [];
+    const parents: ENDIfStatement[] = [];
 
     // Check if open tag contains `if` directive. If so, wrap output into
     // `<if>` statement and remove directives

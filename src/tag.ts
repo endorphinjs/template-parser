@@ -23,7 +23,7 @@ const directives = [prefix, 'on', 'ref', 'class', 'partial', 'animate'];
 /**
  * Consumes tag from current stream location, if possible
  */
-export default function tag(scanner: Scanner): ParsedTag {
+export default function parseTag(scanner: Scanner): ParsedTag {
     return openTag(scanner) || closeTag(scanner);
 }
 
@@ -56,7 +56,8 @@ export function openTag(scanner: Scanner): ParsedTag {
                     const shouldValidateSlot = attrName === (name.name === 'slot' ? 'name' : 'slot');
 
                     if (shouldValidateSlot && attr.value && attr.value.type !== 'Literal') {
-                        throw scanner.error(`Slot name must be a string literal, expressions are not supported`, attr.value)
+                        // tslint:disable-next-line:max-line-length
+                        throw scanner.error(`Slot name must be a string literal, expressions are not supported`, attr.value);
                     }
 
                     tag.attributes.push(attr);
@@ -153,12 +154,12 @@ function attribute(scanner: Scanner): ENDAttribute {
             value = scanner.expect(attributeValue, 'Expecting attribute value');
         }
 
-        return scanner.ast(<ENDAttribute>{
+        return scanner.ast({
             type: 'ENDAttribute',
             name,
             value,
             start
-        });
+        } as ENDAttribute);
     }
 }
 
@@ -216,7 +217,7 @@ function attributeValueExpression(scanner: Scanner): ENDAttributeValueExpression
                 const text = scanner.substring(start, pos);
                 elements.push(literal(text, text, scanner.loc(start)));
             }
-            elements.push(expr)
+            elements.push(expr);
             start = scanner.pos;
         } else {
             scanner.pos++;
@@ -228,11 +229,11 @@ function attributeValueExpression(scanner: Scanner): ENDAttributeValueExpression
         elements.push(literal(text, text, scanner.loc(start)));
     }
 
-    return <ENDAttributeValueExpression>{
+    return {
         type: 'ENDAttributeValueExpression',
         elements,
         ...scanner.loc()
-    };
+    } as ENDAttributeValueExpression;
 }
 
 /**
@@ -259,7 +260,7 @@ function getDirective(attr: ENDAttribute): ENDDirective {
         const m = attr.name.name.match(/^([\w-]+):/);
 
         if (m && directives.includes(m[1])) {
-            const prefix = m[1];
+            const pfx = m[1];
             const { name, loc } = attr.name;
             const directiveId = identifier(name.slice(m[0].length), {
                 start: attr.name.start + m[0].length,
@@ -275,11 +276,11 @@ function getDirective(attr: ENDAttribute): ENDDirective {
 
             return {
                 type: 'ENDDirective',
-                prefix,
+                prefix: pfx,
                 name: directiveId.name,
                 value: attr.value,
                 loc: attr.name.loc
-            }
+            };
         }
     }
 }
@@ -325,13 +326,16 @@ function castAttributeValue(value: string): LiteralValue {
     return value;
 }
 
-function createTag(scanner: Scanner, name: Identifier, tagType: 'open' | 'close', selfClosing: boolean = false): ParsedTag {
-    return scanner.ast(<ParsedTag>{
+function createTag(scanner: Scanner,
+                   name: Identifier,
+                   tagType: 'open' | 'close',
+                   selfClosing: boolean = false): ParsedTag {
+    return scanner.ast({
         type: 'ParsedTag',
         name,
         tagType,
         selfClosing,
         attributes: [],
         directives: [],
-    });
+    } as ParsedTag);
 }

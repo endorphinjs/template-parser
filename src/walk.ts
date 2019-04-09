@@ -1,38 +1,22 @@
 import * as acornWalk from 'acorn-walk';
 import * as Ast from './ast';
 
-interface AstWalker<T> {
-    (node: Ast.Node, state: T, c: AstWalkerContinuation<T>): void;
-}
-
-interface AstWalkerContinuation<T> {
-    (node: Ast.Node, state: T, type?: string): void;
-}
+type AstWalker<T> = (node: Ast.Node, state: T, c: AstWalkerContinuation<T>) => void;
+type AstWalkerContinuation<T> = (node: Ast.Node, state: T, type?: string) => void;
+type AstVisitor<T, U> = (node: Ast.Node, state: T, addon: U) => void;
+type AstVisitorCallback<T> = (node: Ast.Node, state: T, type: string) => void;
+type AstAncestorVisitorCallback<T> = (node: Ast.Node, state: T, ancestors: Ast.Node[], type: string) => void;
+type TestFn = (type: string) => boolean;
 
 interface AstVisitors<T> {
-    [nodeType: string]: AstWalker<T>
-}
-
-interface AstVisitor<T, U> {
-    (node: Ast.Node, state: T, addon: U): void;
+    [nodeType: string]: AstWalker<T>;
 }
 
 interface AstVisitorMap<T, U> {
-    [nodeType: string]: AstVisitor<T, U>
+    [nodeType: string]: AstVisitor<T, U>;
 }
 
-interface AstVisitorCallback<T> {
-    (node: Ast.Node, state: T, type: string): void;
-}
-
-interface AstAncestorVisitorCallback<T> {
-    (node: Ast.Node, state: T, ancestors: Ast.Node[], type: string): void;
-}
-
-interface TestFn {
-    (type: string): boolean;
-}
-
+// tslint:disable-next-line:no-empty
 const ignore: AstWalker<object> = () => {};
 
 /**
@@ -54,7 +38,7 @@ const ignore: AstWalker<object> = () => {};
  * walker, and state can be used to give this walked an initial
  * state.
  */
-export function simple<T>(node: Ast.Node, visitors: AstVisitorMap<T, void>, baseVisitor = base, state?: T, override?: string): void {
+export function walk<T>(node: Ast.Node, visitors: AstVisitorMap<T, void>, baseVisitor = base, state?: T, override?: string): void {
     acornWalk.simple(node, visitors, baseVisitor, state, override);
 }
 
@@ -63,7 +47,7 @@ export function simple<T>(node: Ast.Node, visitors: AstVisitorMap<T, void>, base
  * current node) and passes them to the callback as third parameter
  * (and also as state parameter when no other state is present).
  */
-export function ancestor<T>(node: Ast.Node, visitors: AstVisitorMap<T, Ast.Expression[]>, baseVisitor = base, state?: T): void {
+export function walkAncestor<T>(node: Ast.Node, visitors: AstVisitorMap<T, Ast.Expression[]>, baseVisitor = base, state?: T): void {
     acornWalk.ancestor(node, visitors, baseVisitor, state);
 }
 
@@ -74,14 +58,14 @@ export function ancestor<T>(node: Ast.Node, visitors: AstVisitorMap<T, Ast.Expre
  * their child nodes (by calling their third argument on these
  * nodes).
  */
-export function recursive<T>(node: Ast.Node, state?: T, funcs?: AstVisitors<T>, baseVisitor = base, override?: string): void {
+export function walkRecursive<T>(node: Ast.Node, state?: T, funcs?: AstVisitors<T>, baseVisitor = base, override?: string): void {
     acornWalk.recursive(node, state, funcs, baseVisitor, override);
 }
 
 /**
  *  A full walk triggers the callback on each node
  */
-export function full<T>(node: Ast.Node, callback: AstVisitorCallback<T>, baseVisitor = base, state?: T, override?: string): void {
+export function walkFull<T>(node: Ast.Node, callback: AstVisitorCallback<T>, baseVisitor = base, state?: T, override?: string): void {
     acornWalk.full(node, callback, baseVisitor, state, override);
 }
 
@@ -89,7 +73,7 @@ export function full<T>(node: Ast.Node, callback: AstVisitorCallback<T>, baseVis
  * An fullAncestor walk is like an ancestor walk, but triggers
  * the callback on each node
  */
-export function fullAncestor<T>(node: Ast.Node, callback: AstAncestorVisitorCallback<T>, baseVisitor = base, state?: T) {
+export function walkFullAncestor<T>(node: Ast.Node, callback: AstAncestorVisitorCallback<T>, baseVisitor = base, state?: T) {
     acornWalk.fullAncestor(node, callback, baseVisitor, state);
 }
 
@@ -98,7 +82,12 @@ export function fullAncestor<T>(node: Ast.Node, callback: AstAncestorVisitorCall
  * null can be used as wildcard). Returns a `{node, state}` object, or
  * `undefined` when it doesn't find a matching node.
  */
-export function findNodeAt<T>(node: Ast.Node, start?: number | null, end?: number | null, test?: string | TestFn | null, baseVisitor = base, state?: T): { node: Node, state: T } {
+export function findNodeAt<T>(node: Ast.Node,
+                              start?: number | null,
+                              end?: number | null,
+                              test?: string | TestFn | null,
+                              baseVisitor = base, state?: T):
+                              { node: Node, state: T } {
     return acornWalk.findNodeAt(node, start, end, test, baseVisitor, state);
 }
 
@@ -106,7 +95,12 @@ export function findNodeAt<T>(node: Ast.Node, start?: number | null, end?: numbe
  * Find the innermost node of a given type that contains the given
  * position. Interface similar to `findNodeAt`.
  */
-export function findNodeAround<T>(node: Ast.Node, pos: number, test: string | TestFn | null, baseVisitor = base, state?: T): { node: Node, state: T } {
+export function findNodeAround<T>(node: Ast.Node,
+                                  pos: number,
+                                  test: string | TestFn | null,
+                                  baseVisitor = base,
+                                  state?: T):
+                                  { node: Node, state: T } {
     return acornWalk.findNodeAround(node, pos, test, baseVisitor, state);
 }
 
@@ -120,11 +114,16 @@ export function findNodeAfter<T>(node: Ast.Node, pos: number, test: string | Tes
 /**
  * Find the outermost matching node before a given position.
  */
-export function findNodeBefore<T>(node: Ast.Node, pos: number, test: string | TestFn | null, baseVisitor = base, state?: T): { node: Node, state: T } {
+export function findNodeBefore<T>(node: Ast.Node,
+                                  pos: number,
+                                  test: string | TestFn | null,
+                                  baseVisitor = base,
+                                  state?: T):
+                                  { node: Node, state: T } {
     return acornWalk.findNodeAfter(node, pos, test, baseVisitor, state);
 }
 
-export const base: AstVisitors<object> = acornWalk.make(<AstVisitors<object>>{
+export const base: AstVisitors<object> = acornWalk.make({
     ENDIdentifier: ignore,
     ENDPropertyIdentifier: ignore,
     ENDStateIdentifier: ignore,
@@ -139,7 +138,6 @@ export const base: AstVisitors<object> = acornWalk.make(<AstVisitors<object>>{
         walkArray(node.body, state, c);
     },
     ENDPartial(node: Ast.ENDPartial, state, c) {
-        c(node.id, state);
         walkArray(node.params, state, c);
         walkArray(node.body, state, c);
     },
@@ -154,7 +152,6 @@ export const base: AstVisitors<object> = acornWalk.make(<AstVisitors<object>>{
         c(node.value, state);
     },
     ENDDirective(node: Ast.ENDDirective, state, c) {
-        c(node.name, state);
         c(node.value, state);
     },
     ENDAttributeValueExpression(node: Ast.ENDAttributeValueExpression, state, c) {
@@ -199,7 +196,7 @@ export const base: AstVisitors<object> = acornWalk.make(<AstVisitors<object>>{
     ENDImport: ignore,
     ENDStylesheet: ignore,
     ENDScript: ignore
-});
+} as AstVisitors<object>);
 
 function walkArray<T>(nodes: Ast.Node[], state: T, c: AstWalkerContinuation<T>) {
     nodes.forEach(node => c(node, state));

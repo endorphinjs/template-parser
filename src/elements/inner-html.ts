@@ -13,7 +13,8 @@ export default function innerHTML(scanner: Scanner): ENDInnerHTML {
     const start = scanner.pos;
 
     if (scanner.eat(EXPRESSION_START) && scanner.eat(EXPRESSION_START)) {
-        let stack = 0, ch: number;
+        let stack = 0;
+        let ch: number;
 
         while (!scanner.eof()) {
             if (eatQuoted(scanner)) {
@@ -31,7 +32,7 @@ export default function innerHTML(scanner: Scanner): ENDInnerHTML {
                             type: 'ENDInnerHTML',
                             value: parseJS(scanner.substring(start + 2, scanner.pos - 2), scanner),
                             ...scanner.loc(start)
-                        }
+                        };
                     } else {
                         throw scanner.error(`Expecting ${String.fromCharCode(EXPRESSION_END).repeat(2)} at the end of inner HTML expression`);
                     }

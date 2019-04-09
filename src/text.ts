@@ -18,7 +18,7 @@ export default function text(scanner: Scanner): Literal {
             type: 'Literal',
             value: scanner.current(),
             ...scanner.loc()
-        }
+        };
     }
 }
 

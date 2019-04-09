@@ -2,7 +2,7 @@ import { Parser } from 'acorn';
 import endorphinParser from './acorn-plugin';
 import { Program, Identifier, Expression } from '../ast';
 import Scanner from '../scanner';
-import { ancestor as walk } from '../walk';
+import { walkAncestor as walk } from '../walk';
 import { eatPair } from '../utils';
 
 export const jsGlobals = new Set(['Math', 'String', 'Boolean', 'Object']);
@@ -106,8 +106,7 @@ function isReserved(id: Identifier, ancestors: Expression[]): boolean {
     }
 
     // Check if given identifier is defined as function argument
-    for (let i = 0; i < ancestors.length; i++) {
-        const ancestor = ancestors[i];
+    for (const ancestor of ancestors) {
         if (ancestor.type === 'FunctionDeclaration' || ancestor.type === 'ArrowFunctionExpression') {
             const hasArg = ancestor.params.some(param => param.type === 'Identifier' && param.name === id.name);
             if (hasArg) {

@@ -1,7 +1,7 @@
-import Scanner from "../scanner";
-import { ENDElement, ParsedTag, ENDStatement, ENDAddClassStatement, ENDIfStatement, Program } from "../ast";
-import { tagBody, InnerStatement, assertExpression } from "./utils";
-import { literal } from "../utils";
+import Scanner from '../scanner';
+import { ENDElement, ParsedTag, ENDStatement, ENDAddClassStatement, ENDIfStatement, Program } from '../ast';
+import { tagBody, InnerStatement, assertExpression } from './utils';
+import { literal } from '../utils';
 
 /**
  * Consumes regular output element
@@ -17,10 +17,10 @@ export default function elementStatement(scanner: Scanner, openTag: ParsedTag, n
         directives: openTag.directives,
         body: tagBody(scanner, openTag, next),
         loc: openTag.loc
-    }
+    };
 
     // Expand directives in parsed element: replaces some known directives with AST nodes
-    let ctx: ENDStatement = elem;
+    const ctx: ENDStatement = elem;
 
     for (let i = elem.directives.length - 1; i >= 0; i--) {
         const dir = elem.directives[i];
@@ -37,12 +37,12 @@ export default function elementStatement(scanner: Scanner, openTag: ParsedTag, n
 
             if (dir.value !== null) {
                 assertExpression(scanner, dir);
-                elem.body.unshift(<ENDIfStatement>{
+                elem.body.unshift({
                     type: 'ENDIfStatement',
                     test: dir.value as Program,
                     consequent: [classStatement],
                     loc: dir.loc
-                });
+                } as ENDIfStatement);
             } else {
                 elem.body.unshift(classStatement);
             }

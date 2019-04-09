@@ -11,7 +11,7 @@ export interface SourceData {
     loc: SourceLocation;
 }
 
-export interface MatchFunction { (ch: number): boolean; }
+export type MatchFunction = (ch: number) => boolean;
 
 /**
  * A streaming, character code-based string reader
@@ -30,12 +30,12 @@ export default class Scanner {
     lines?: number[];
 
     /**
-     * @param string A string to consume
+     * @param str A string to consume
      * @param url Location of consumed content (e.g. url, file path etc.)
      * @param start Initial parsing location
      * @param end  Final parsing location in string
      */
-    constructor(readonly string: string, readonly url?: string | null, start: number = 0, end: number = string.length) {
+    constructor(readonly str: string, readonly url?: string | null, start: number = 0, end: number = str.length) {
         this.pos = this.start = start;
         this.end = end;
         this.lines = null;
@@ -54,7 +54,7 @@ export default class Scanner {
      * stream end
      */
     limit(start?: number, end?: number): Scanner {
-        const clone = new Scanner(this.string, this.url, start, end);
+        const clone = new Scanner(this.str, this.url, start, end);
         clone.lines = this.lines;
         return clone;
     }
@@ -64,7 +64,7 @@ export default class Scanner {
      * Will return NaN at the end of the file.
      */
     peek(): number {
-        return this.string.charCodeAt(this.pos);
+        return this.str.charCodeAt(this.pos);
     }
 
     /**
@@ -75,7 +75,7 @@ export default class Scanner {
         // NB it looks like it’s better to override `peek()` method with `ahead`
         // argument but such method will introduce polymorphism and excessive
         // runtime checks
-        return this.string.charCodeAt(this.pos + ahead);
+        return this.str.charCodeAt(this.pos + ahead);
     }
 
     /**
@@ -83,8 +83,8 @@ export default class Scanner {
      * Also returns <code>undefined</code> when no more characters are available.
      */
     next(): number {
-        if (this.pos < this.string.length) {
-            return this.string.charCodeAt(this.pos++);
+        if (this.pos < this.str.length) {
+            return this.str.charCodeAt(this.pos++);
         }
     }
 
@@ -111,7 +111,7 @@ export default class Scanner {
      */
     eatWhile(match: number | MatchFunction): boolean {
         const start = this.pos;
-        while (!this.eof() && this.eat(match)) { } // eslint-disable-line
+        while (!this.eof() && this.eat(match)) { } // tslint:disable-line
         return this.pos !== start;
     }
 
@@ -135,7 +135,7 @@ export default class Scanner {
      * Returns substring for given range
      */
     substring(start: number, end?: number): string {
-        return this.string.slice(start, end);
+        return this.str.slice(start, end);
     }
 
     /**
@@ -148,7 +148,7 @@ export default class Scanner {
             source: this.url
         };
 
-        return { start, end, loc }
+        return { start, end, loc };
     }
 
     /**
@@ -156,7 +156,7 @@ export default class Scanner {
      */
     sourceLocation(offset: number): Position {
         if (!this.lines) {
-            this.lines = getLines(this.string);
+            this.lines = getLines(this.str);
         }
 
         const { lines } = this;
@@ -174,8 +174,8 @@ export default class Scanner {
      * Creates AST node from current state
      */
     ast<T>(data: T): T & SourceData {
-        const start: number = 'start' in data ? data['start'] : this.start;
-        const end: number = 'end' in data ? data['end'] : this.pos;
+        const start: number = 'start' in data ? data['start'] : this.start; // tslint:disable-line
+        const end: number = 'end' in data ? data['end'] : this.pos; // tslint:disable-line
         return {
             ...data,
             ...this.loc(start, end)
@@ -191,7 +191,7 @@ export default class Scanner {
         } else if (typeof pos === 'number') {
             pos = this.sourceLocation(pos);
         }
-        return new ENDSyntaxError(message, this.url, pos as Position, this.string);
+        return new ENDSyntaxError(message, this.url, pos as Position, this.str);
     }
 
     expect<T extends Node>(consumer: (scanner: Scanner) => T, error: string): T;
@@ -221,7 +221,8 @@ export default class Scanner {
  */
 function getLines(text: string): number[] {
     const lines = [0];
-    let i = 0, ch: number;
+    let i = 0;
+    let ch: number;
 
     while (i < text.length) {
         ch = text.charCodeAt(i++);

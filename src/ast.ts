@@ -1,17 +1,15 @@
 import { SourceLocation } from 'acorn';
 
 export interface Node {
-    type: string
-    start?: number
-    end?: number
-    loc?: SourceLocation
-    sourceFile?: string
+    type: string;
+    start?: number;
+    end?: number;
+    loc?: SourceLocation;
+    sourceFile?: string;
 }
 
 // AST types for JavaScript-like expressions
-export interface JSNode extends Node {
-    start?: number
-}
+type JSNode = Node;
 
 export type ArgumentListElement = Expression | SpreadElement;
 export type ArrayExpressionElement = Expression | SpreadElement | null;
@@ -192,9 +190,11 @@ export interface BlockStatement extends JSNode {
 }
 
 // Endorphin template AST
-export interface ENDNode extends Node { }
+type ENDNode = Node;
 
-export type ENDStatement = ENDElement | ENDInnerHTML | ENDPlainStatement | ENDAttributeStatement | ENDAddClassStatement | ENDVariableStatement | ENDControlStatement | ENDPartialStatement;
+export type ENDStatement = ENDElement | ENDInnerHTML | ENDPlainStatement
+    | ENDAttributeStatement | ENDAddClassStatement | ENDVariableStatement
+    | ENDControlStatement | ENDPartialStatement;
 export type ENDProgramStatement = ENDTemplate | ENDPartial | ENDImport | ENDStatement;
 export type ENDControlStatement = ENDIfStatement | ENDChooseStatement | ENDForEachStatement | ENDPartialStatement;
 export type ENDPlainStatement = Literal | Program;
@@ -328,7 +328,7 @@ export interface ENDScript extends ENDNode {
 }
 
 export interface ParsedTag extends Node {
-    type: 'ParsedTag',
+    type: 'ParsedTag';
     name: Identifier;
     attributes: ENDAttribute[];
     directives: ENDDirective[];

@@ -25,7 +25,7 @@ export default function stylesheetStatement(scanner: Scanner, openTag: ParsedTag
             mime: getMIME(openTag),
             content: String(text.value),
             url: scanner.url
-        }
+        };
     }
 }
 

@@ -1,7 +1,7 @@
-import Scanner from "../scanner";
-import { openTag } from "../tag";
-import { ENDChooseStatement, Program, ParsedTag, ENDAttribute } from "../ast";
-import { ignored, getControlName, tagBody, InnerStatement, closesTag, prefix, expectAttributeExpression, tagName } from "./utils";
+import Scanner from '../scanner';
+import { openTag } from '../tag';
+import { ENDChooseStatement, Program, ParsedTag, ENDAttribute } from '../ast';
+import { ignored, getControlName, tagBody, InnerStatement, closesTag, prefix, expectAttributeExpression, tagName } from './utils';
 
 /**
  * Consumes <choose> statement
@@ -13,7 +13,7 @@ export default function chooseStatement(scanner: Scanner, open: ParsedTag, next:
         return;
     }
 
-    const chooseStatement: ENDChooseStatement = {
+    const choose: ENDChooseStatement = {
         type: 'ENDChooseStatement',
         cases: [],
         loc: open.loc
@@ -40,7 +40,7 @@ export default function chooseStatement(scanner: Scanner, open: ParsedTag, next:
                 finished = true;
             }
 
-            chooseStatement.cases.push({
+            choose.cases.push({
                 type: 'ENDChooseCase',
                 test: test && (test.value as Program),
                 consequent: tagBody(scanner, tagEntry, next),
@@ -51,5 +51,5 @@ export default function chooseStatement(scanner: Scanner, open: ParsedTag, next:
         }
     }
 
-    return chooseStatement;
+    return choose;
 }

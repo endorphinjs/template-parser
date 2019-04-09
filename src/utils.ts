@@ -141,7 +141,8 @@ export function eatPair(scanner: Scanner, open: number, close: number): boolean 
     const start = scanner.pos;
 
     if (scanner.eat(open)) {
-        let stack = 1, ch: number;
+        let stack = 1;
+        let ch: number;
 
         while (!scanner.eof()) {
             if (eatQuoted(scanner)) {

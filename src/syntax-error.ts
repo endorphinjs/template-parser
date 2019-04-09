@@ -50,14 +50,14 @@ function getSnippet(code: string, line: number, column: number): string {
 
     // Replace all tab characters with spaces for better representation in TTY
     const indent = '  ';
-    const chunk = lines.slice(start, start + 5).map((line, i) => {
+    const chunk = lines.slice(start, start + 5).map((l, i) => {
         if (i === targetLine) {
-            const result = replaceTabs(line, indent, column);
+            const result = replaceTabs(l, indent, column);
             column += result.offset;
             return result.text;
         }
 
-        return line.replace(/\t/g, indent);
+        return l.replace(/\t/g, indent);
     });
 
     chunk.splice(targetLine + 1, 0, '-'.repeat(column) + '^');
@@ -69,7 +69,7 @@ function splitByLines(text: string): string[] {
 }
 
 function replaceTabs(text: string, replacement: string, column: number = 0): { text: string, offset: number} {
-    let offset = 0
+    let offset = 0;
     let output = '';
 
     for (let i = 0; i < text.length; i++) {

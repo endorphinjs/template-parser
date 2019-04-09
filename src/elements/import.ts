@@ -28,5 +28,5 @@ export default function importStatement(scanner: Scanner, openTag: ParsedTag): E
 }
 
 function stringValue(attr: ENDAttribute): string {
-    return String((attr.value as Literal).value)
+    return String((attr.value as Literal).value);
 }
