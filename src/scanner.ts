@@ -1,6 +1,5 @@
-import { Position, SourceLocation } from 'acorn';
 import { ENDSyntaxError } from './syntax-error';
-import { Node } from './ast';
+import { Node, SourceLocation, Position } from './ast';
 
 const LF = 10;
 const CR = 13;

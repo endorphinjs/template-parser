@@ -1,4 +1,14 @@
-import { SourceLocation } from 'acorn';
+interface Position {
+    line: number;
+    column: number;
+    offset: number
+}
+
+export interface SourceLocation {
+    start: Position
+    end: Position
+    source?: string | null
+}
 
 export interface Node {
     type: string;

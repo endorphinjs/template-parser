@@ -2,12 +2,16 @@
   "name": "@endorphinjs/template-parser",
   "version": "0.0.0",
   "description": "Parses EndorphinJS templates to ESTree-compatible AST",
-  "main": "index.js",
+  "main": "./dist/template-parser.cjs.js",
+  "module": "./dist/template-parser.es.js",
+  "types": "./dist/types.d.ts",
   "scripts": {
     "build": "rollup -c",
     "lint": "tslint ./index.ts ./src/**/*.ts",
     "test": "mocha",
-    "prepare": "npm run lint && npm run test && npm run build"
+    "types": "cp ./src/*.d.ts ./dist/",
+    "clean": "rm -rf ./dist",
+    "prepare": "npm run lint && npm run test && npm run clean && npm run build && npm run types"
   },
   "keywords": [
     "endorphin",
