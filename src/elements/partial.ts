@@ -1,7 +1,8 @@
 import Scanner from '../scanner';
 import { ENDPartialStatement, ParsedTag } from '../ast';
-import { tagBody, getAttributes, tagName } from './utils';
+import { getAttributes, tagName } from './utils';
 import { identifier } from '../utils';
+import { tagBody } from '../tag';
 
 const prefix = 'partial:';
 

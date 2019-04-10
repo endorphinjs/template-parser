@@ -1,6 +1,6 @@
 import Scanner from './scanner';
 import { Program, ENDProgram, ENDStatement, ParsedTag, ENDIfStatement } from './ast';
-import { openTag } from './tag';
+import { openTag, tagText } from './tag';
 import templateStatement from './elements/template';
 import ifStatement from './elements/if';
 import chooseStatement from './elements/choose';
@@ -15,7 +15,7 @@ import stylesheetStatement from './elements/stylesheet';
 import scriptStatement from './elements/script';
 import {
     prefix, ignored, getControlName, InnerStatement, assertExpression,
-    getAttrValueIfLiteral, tagText
+    getAttrValueIfLiteral
 } from './elements/utils';
 
 interface StatementMap {

@@ -1,6 +1,7 @@
 import Scanner from '../scanner';
 import { ENDForEachStatement, ParsedTag, Program } from '../ast';
-import { getAttr, tagBody, InnerStatement, expectAttributeExpression, assertExpression } from './utils';
+import { getAttr, InnerStatement, expectAttributeExpression, assertExpression } from './utils';
+import { tagBody } from '../tag';
 
 /**
  * Consumes <for-each> statement

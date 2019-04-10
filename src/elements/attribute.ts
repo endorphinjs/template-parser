@@ -1,6 +1,7 @@
 import Scanner from '../scanner';
 import { ENDAttributeStatement, ParsedTag } from '../ast';
-import { emptyBody, InnerStatement } from './utils';
+import { InnerStatement } from './utils';
+import { emptyBody } from '../tag';
 
 /**
  * Consumes <attribute> statement

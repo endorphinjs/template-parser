@@ -1,6 +1,7 @@
 import Scanner from '../scanner';
 import { ParsedTag, ENDStylesheet, Literal } from '../ast';
-import { expectAttributeLiteral, emptyBody, tagText, getAttrValueIfLiteral, tagName } from './utils';
+import { expectAttributeLiteral, getAttrValueIfLiteral, tagName } from './utils';
+import { emptyBody, tagText } from '../tag';
 
 const defaultMIME = 'text/css';
 

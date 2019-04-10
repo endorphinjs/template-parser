@@ -1,6 +1,7 @@
 import Scanner from '../scanner';
 import { ENDTemplate, ParsedTag, ENDPartial } from '../ast';
-import { InnerStatement, tagBody, getDirective } from './utils';
+import { InnerStatement, getDirective } from './utils';
+import { tagBody } from '../tag';
 
 /**
  * Consumes top-level <template> statement

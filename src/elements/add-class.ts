@@ -1,8 +1,9 @@
 import Scanner from '../scanner';
 import { ENDAddClassStatement, ENDPlainStatement, ParsedTag } from '../ast';
-import { InnerStatement, ignored, closesTag, tagName } from './utils';
+import { InnerStatement, ignored, tagName } from './utils';
 import expression from '../expression';
 import text from '../text';
+import { closesTag } from '../tag';
 
 export default function addClassStatement(scanner: Scanner, openTag: ParsedTag, next?: InnerStatement): ENDAddClassStatement {
     if (openTag.selfClosing) {

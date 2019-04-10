@@ -4,9 +4,10 @@
   "description": "Parses EndorphinJS templates to ESTree-compatible AST",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "rollup -c",
     "lint": "tslint ./index.ts ./src/**/*.ts",
-    "test": "mocha"
+    "test": "mocha",
+    "prepare": "npm run lint && npm run test && npm run build"
   },
   "keywords": [
     "endorphin",
@@ -21,6 +22,8 @@
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.0",
     "mocha": "^6.1.1",
+    "rollup": "^1.9.2",
+    "rollup-plugin-typescript": "^1.0.1",
     "ts-node": "^8.0.3",
     "tslint": "^5.15.0",
     "typescript": "^3.4.2"

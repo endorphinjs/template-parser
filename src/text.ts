@@ -1,7 +1,7 @@
 import Scanner from './scanner';
 import { Literal } from './ast';
 import { EXPRESSION_START } from './expression';
-import { TAG_START, TAG_CLOSE, nameStartChar } from './tag';
+import { TAG_START, TAG_CLOSE, nameStartChar } from './utils';
 
 /**
  * Consumes text token from given stream

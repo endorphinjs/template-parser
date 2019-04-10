@@ -1,7 +1,8 @@
 import Scanner from '../scanner';
 import { ENDElement, ParsedTag, ENDStatement, ENDAddClassStatement, ENDIfStatement, Program } from '../ast';
-import { tagBody, InnerStatement, assertExpression } from './utils';
+import { InnerStatement, assertExpression } from './utils';
 import { literal } from '../utils';
+import { tagBody } from '../tag';
 
 /**
  * Consumes regular output element

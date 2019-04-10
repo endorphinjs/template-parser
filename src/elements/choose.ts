@@ -1,7 +1,7 @@
 import Scanner from '../scanner';
-import { openTag } from '../tag';
+import { openTag, closesTag, tagBody } from '../tag';
 import { ENDChooseStatement, Program, ParsedTag, ENDAttribute } from '../ast';
-import { ignored, getControlName, tagBody, InnerStatement, closesTag, prefix, expectAttributeExpression, tagName } from './utils';
+import { ignored, getControlName, InnerStatement, prefix, expectAttributeExpression, tagName } from './utils';
 
 /**
  * Consumes <choose> statement

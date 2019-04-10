@@ -4,6 +4,28 @@ import { Identifier, LiteralValue, Literal, Node } from './ast';
 export const SINGLE_QUOTE = 39; // '
 export const DOUBLE_QUOTE = 34; // "
 export const ESCAPE = 92; // \
+export const UNDERSCORE = 95; // _
+export const NAMESPACE_DELIMITER = 58; // :
+export const DASH = 45; // -
+export const TAG_START = 60; // <
+export const TAG_END = 62; // >
+export const TAG_CLOSE = 47; // /
+export const ATTR_DELIMITER = 61; // =
+export const DOT = 46; // .
+
+/**
+ * Check if given character can be used as a start of tag name or attribute
+ */
+export function nameStartChar(ch: number): boolean {
+    return isAlpha(ch) || ch === UNDERSCORE || ch === NAMESPACE_DELIMITER;
+}
+
+/**
+ * Check if given character can be used as a tag name
+ */
+export function nameChar(ch: number): boolean {
+    return nameStartChar(ch) || isNumber(ch) || ch === DASH || ch === DOT;
+}
 
 /**
  * Factory function for creating `Identifier` AST node

@@ -1,6 +1,7 @@
 import Scanner from '../scanner';
 import { ParsedTag, ENDScript } from '../ast';
-import { tagText, getAttrValueIfLiteral } from './utils';
+import { getAttrValueIfLiteral } from './utils';
+import { tagText } from '../tag';
 
 const defaultMIME = 'text/javascript';
 

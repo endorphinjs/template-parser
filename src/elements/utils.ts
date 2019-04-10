@@ -1,10 +1,6 @@
 import Scanner from '../scanner';
-import { toCharCodes, eatSection, isSpace, literal, isLiteral, isIdentifier } from '../utils';
-import { LiteralValue, ENDStatement, ENDAttribute, ParsedTag, ENDElement, ENDAttributeStatement, Node, Literal, ENDDirective } from '../ast';
-import { closeTag, openTag } from '../tag';
-import text from '../text';
-import expression from '../expression';
-import innerHTML from './inner-html';
+import { toCharCodes, eatSection, isSpace, isLiteral, isIdentifier } from '../utils';
+import { LiteralValue, ENDStatement, ENDAttribute, ParsedTag, ENDElement, ENDAttributeStatement, ENDDirective } from '../ast';
 import { ENDCompileError } from '../syntax-error';
 
 const cdataOpen = toCharCodes('<![CDATA[');
@@ -21,129 +17,6 @@ export const prefix = 'e';
 const nsPrefix = prefix + ':';
 
 export type InnerStatement = (scanner: Scanner, openTag: ParsedTag, next?: InnerStatement) => ENDStatement;
-
-/**
- * Consumes tag content from given scanner into `body` argument
- */
-export function tagBody(scanner: Scanner, open: ParsedTag, consumeTag?: InnerStatement, body: ENDStatement[] = []): ENDStatement[] {
-    if (open.selfClosing) {
-        // Nothing to consume in self-closing tag
-        return;
-    }
-
-    const tagStack: ParsedTag[] = [open];
-    const items: ENDStatement[] = [];
-    let tagEntry: ParsedTag;
-    let token: ENDStatement;
-
-    while (!scanner.eof()) {
-        if (closesTag(scanner, tagStack[tagStack.length - 1])) {
-            tagStack.pop();
-            if (!tagStack.length) {
-                break;
-            }
-        } else if (tagEntry = openTag(scanner)) {
-            if (consumeTag) {
-                const inner = consumeTag(scanner, tagEntry);
-                if (inner) {
-                    items.push(inner);
-                }
-            } else {
-                tagStack.push(tagEntry);
-            }
-        } else if (token = innerHTML(scanner) || expression(scanner)) {
-            items.push(token);
-        } else if (token = text(scanner)) {
-            // Skip formatting tokens: a whitespace-only text token with new lines
-            const value = String(token.value);
-            if (!/^\s+$/.test(value) || !/[\r\n]/.test(value)) {
-                items.push(token);
-            }
-        } else if (!ignored(scanner)) {
-            throw scanner.error(`Unexpected token`);
-        }
-    }
-
-    // If we reached here then most likely we have unclosed tags
-    if (tagStack.length) {
-        throw scanner.error(`Expecting </${tagName(tagStack.pop())}>`);
-    }
-
-    finalizeTagBody(body, items);
-    return body;
-}
-
-/**
- * Consumes contents of given tag as text, e.g. parses it until it reaches closing
- * tag that matches `open`.
- */
-export function tagText(scanner: Scanner, open: ParsedTag): Literal {
-    if (open.selfClosing) {
-        // Nothing to consume in self-closing tag
-        return;
-    }
-
-    const start = scanner.pos;
-    let end: number;
-    let close: ParsedTag;
-
-    while (!scanner.eof()) {
-        end = scanner.pos;
-        if (close = closeTag(scanner)) {
-            if (tagName(close) === tagName(open)) {
-                return literal(scanner.substring(start, end), null, scanner.loc(start, end));
-            }
-        } else {
-            scanner.pos++;
-        }
-    }
-
-    // If we reached here then most likely we have unclosed tags
-    throw scanner.error(`Expecting </${tagName(open)}>`);
-}
-
-/**
- * Returns name of given parsed tag
- */
-export function tagName(tag: ParsedTag): string {
-    return tag.name.name;
-}
-
-/**
- * Consumes tag content and ensures it’s empty, e.g. no meaningful data in it,
- * or throw exception
- * @param scanner
- * @param open
- */
-export function emptyBody(scanner: Scanner, open: ParsedTag): void {
-    if (open.selfClosing) {
-        // Nothing to consume in self-closing tag
-        return;
-    }
-
-    while (!scanner.eof() && !closesTag(scanner, open)) {
-        if (!ignored(scanner)) {
-            throw scanner.error(`Unexpected token, tag <${tagName(open)}> must be empty`);
-        }
-    }
-}
-
-/**
- * Check if next token in current scanner state is a closing tag for given `open` one
- */
-export function closesTag(scanner: Scanner, open: ParsedTag): boolean {
-    const pos = scanner.pos;
-    const close = closeTag(scanner);
-    if (close) {
-        if (tagName(close) === tagName(open)) {
-            return true;
-        }
-
-        throw scanner.error(`Unexpected closing tag </${tagName(close)}>, expecting </${tagName(open)}>`, pos);
-    }
-
-    return false;
-}
 
 /**
  * Consumes XML sections that can be safely ignored by Endorphin
@@ -169,6 +42,13 @@ export function getControlName(name: string): string {
     }
 
     return null;
+}
+
+/**
+ * Returns name of given parsed tag
+ */
+export function tagName(tag: ParsedTag): string {
+    return tag.name.name;
 }
 
 /**
@@ -266,30 +146,4 @@ export function assertLiteral(scanner: Scanner, attr: ENDAttribute): void {
         const attrName: string = isIdentifier(attr.name) ? attr.name.name : null;
         throw scanner.error(`Expecting string literal as${attrName ? ` "${attrName}"` : ''} attribute value`, attr);
     }
-}
-
-/**
- * Finalizes parsed body content
- */
-function finalizeTagBody(parent: ENDStatement[], parsed: ENDStatement[]): void {
-    removeFormatting(parsed).forEach(item => parent.push(item));
-}
-
-/**
- * Removes text formatting from given list of statements
- */
-function removeFormatting(statements: ENDStatement[]): ENDStatement[] {
-    return statements.filter((node, i) => {
-        if (isLiteral(node) && /[\r\n]/.test(String(node.value)) && /^\s+$/.test(String(node.value))) {
-            // Looks like insignificant white-space character, check if we can
-            // remove it
-            return isContentNode(statements[i - 1]) || isContentNode(statements[i + 1]);
-        }
-
-        return true;
-    });
-}
-
-function isContentNode(node: Node): boolean {
-    return isLiteral(node) || node.type === 'Program';
 }

@@ -1,6 +1,6 @@
 import Scanner from '../scanner';
 import { ENDVariableStatement, ENDVariable, ParsedTag, ENDAttribute } from '../ast';
-import { emptyBody } from './utils';
+import { emptyBody } from '../tag';
 
 /**
  * Consumes <variable> statement

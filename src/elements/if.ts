@@ -1,6 +1,7 @@
 import Scanner from '../scanner';
 import { ENDIfStatement, ParsedTag, Program } from '../ast';
-import { tagBody, InnerStatement, expectAttributeExpression } from './utils';
+import { InnerStatement, expectAttributeExpression } from './utils';
+import { tagBody } from '../tag';
 
 /**
  * Consumes <if> statement

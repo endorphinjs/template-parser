@@ -12,7 +12,7 @@ interface AstVisitors<T> {
     [nodeType: string]: AstWalker<T>;
 }
 
-interface AstVisitorMap<T, U> {
+export interface AstVisitorMap<T, U> {
     [nodeType: string]: AstVisitor<T, U>;
 }
 
