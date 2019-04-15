@@ -25,6 +25,7 @@
               "source": "samples/template1.html"
             }
           },
+          "component": false,
           "attributes": [],
           "directives": [],
           "body": [
@@ -176,6 +177,7 @@
                   "source": "samples/template1.html"
                 }
               },
+              "component": false,
               "attributes": [
                 {
                   "type": "ENDAttribute",

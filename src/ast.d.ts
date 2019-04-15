@@ -60,6 +60,7 @@ export interface Identifier extends JSNode {
 
     // Endorphin extension: identifier context
     context?: 'property' | 'state' | 'variable' | 'store' | 'helper';
+    raw?: string;
 }
 
 export interface ThisExpression extends JSNode {
@@ -235,6 +236,7 @@ export interface ENDPartial extends ENDNode {
 export interface ENDElement extends ENDNode {
     type: 'ENDElement';
     name: Identifier;
+    component: boolean;
     attributes: ENDAttribute[];
     directives: ENDDirective[];
     body: ENDStatement[];

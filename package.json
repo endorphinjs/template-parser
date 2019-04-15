@@ -6,12 +6,12 @@
   "module": "./dist/template-parser.es.js",
   "types": "./dist/types.d.ts",
   "scripts": {
-    "build": "rollup -c",
+    "build": "npm run types && rollup -c",
     "lint": "tslint ./index.ts ./src/**/*.ts",
     "test": "mocha",
     "types": "cp ./src/*.d.ts ./dist/",
     "clean": "rm -rf ./dist",
-    "prepare": "npm run lint && npm run test && npm run clean && npm run build && npm run types"
+    "prepare": "npm run lint && npm run test && npm run clean && npm run build"
   },
   "keywords": [
     "endorphin",

@@ -20,6 +20,12 @@ interface ParserOptions {
 export const EXPRESSION_START = 123; // {
 export const EXPRESSION_END = 125; // }
 
+const prefixes = {
+    '@': 'variable',
+    '#': 'state',
+    '$': 'store'
+};
+
 /**
  * Consumes expression from current stream location
  */
@@ -76,22 +82,14 @@ export function parseJS(code: string, options: ParserOptions = {}): Program {
                 return;
             }
 
-            switch (node.name[0]) {
-                case '#':
-                    node.context = 'state';
-                    node.name = node.name.slice(1);
-                    break;
-                case '@':
-                    node.context = 'variable';
-                    node.name = node.name.slice(1);
-                    break;
-                case '$':
-                    node.context = 'store';
-                    node.name = node.name.slice(1);
-                    break;
-                default:
-                    node.context = options.helpers && options.helpers.includes(node.name)
-                        ? 'helper' : 'property';
+            const prefix = node.name[0];
+            if (prefix in prefixes) {
+                node.context = prefixes[prefix];
+                node.raw = node.name;
+                node.name = node.name.slice(prefix.length);
+            } else {
+                node.context = options.helpers && options.helpers.includes(node.name)
+                    ? 'helper' : 'property';
             }
         }
     });
