@@ -236,6 +236,7 @@ export interface ENDPartial extends ENDNode {
 export interface ENDElement extends ENDNode {
     type: 'ENDElement';
     name: Identifier;
+    ref?: string;
     component: boolean;
     attributes: ENDAttribute[];
     directives: ENDDirective[];
@@ -326,14 +327,14 @@ export interface ENDImport extends ENDNode {
 export interface ENDStylesheet extends ENDNode {
     type: 'ENDStylesheet';
     mime: string;
-    transformed?: string;
+    transformed?: any;
     content?: string;
     url?: string;
 }
 
 export interface ENDScript extends ENDNode {
     type: 'ENDScript';
-    transformed?: string;
+    transformed?: any;
     mime: string;
     content?: string;
     url?: string;
@@ -342,6 +343,7 @@ export interface ENDScript extends ENDNode {
 export interface ParsedTag extends Node {
     type: 'ParsedTag';
     name: Identifier;
+    ref?: string;
     attributes: ENDAttribute[];
     directives: ENDDirective[];
     tagType: 'open' | 'close';

@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as assert from 'assert';
 import parse from '../index';
+import { ENDElement } from '../src/ast';
 
 describe('Template parser', () => {
     function read(fileName: string): string {
@@ -51,5 +52,28 @@ describe('Template parser', () => {
         });
         assert.equal(ast.scripts[0].url, file);
         assert.equal(ast.scripts[0].mime, 'text/javascript');
+    });
+
+    it('should parse ref', () => {
+        const parseTag = (code: string) => parse(code).body[0] as ENDElement;
+        let elem = parseTag('<div ref="foo" />');
+        assert.equal(elem.ref, 'foo');
+        assert.equal(elem.attributes.length, 0);
+        assert.equal(elem.directives.length, 0);
+
+        elem = parseTag('<div ref=foo />');
+        assert.equal(elem.ref, 'foo');
+        assert.equal(elem.attributes.length, 0);
+        assert.equal(elem.directives.length, 0);
+
+        elem = parseTag('<div ref:foo />');
+        assert.equal(elem.ref, 'foo');
+        assert.equal(elem.attributes.length, 0);
+        assert.equal(elem.directives.length, 0);
+
+        assert.throws(() => parseTag('<div ref:foo=bar />'), 'Shorthand ref should not have value');
+        assert.throws(() => parseTag('<div ref={bar} />'), 'Ref attribute value must be a string');
+
+
     });
 });

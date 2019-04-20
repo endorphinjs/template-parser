@@ -15,6 +15,7 @@ export default function elementStatement(scanner: Scanner, openTag: ParsedTag, n
         type: 'ENDElement',
         name: openTag.name,
         component: openTag.name.name.includes('-'),
+        ref: openTag.ref,
         attributes: openTag.attributes,
         directives: openTag.directives,
         body: tagBody(scanner, openTag, next),

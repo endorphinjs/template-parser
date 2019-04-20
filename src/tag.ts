@@ -15,6 +15,12 @@ import text from './text';
 
 const exprStart = String.fromCharCode(EXPRESSION_START);
 const directives = [prefix, 'on', 'ref', 'class', 'partial', 'animate'];
+const attributeCast = {
+    'true': true,
+    'false': false,
+    'null': null,
+    'undefined': undefined
+};
 
 /**
  * Consumes tag from current stream location, if possible
@@ -41,24 +47,29 @@ export function openTag(scanner: Scanner): ParsedTag {
             scanner.start = pos;
             const tag = createTag(scanner, name, 'open', selfClosing);
             attributes.forEach(attr => {
+                const ref = getRef(attr, scanner);
+                if (ref != null) {
+                    return tag.ref = ref;
+                }
+
                 const directive = getDirective(attr);
                 if (directive) {
                     validateDirective(directive, scanner);
-                    tag.directives.push(directive);
-                } else {
-                    // Validate some edge cases:
-                    // * Currently, we do not support dynamic names in slots.
-                    //   Make sure all slot names are literals
-                    const attrName = isIdentifier(attr.name) ? attr.name.name : null;
-                    const shouldValidateSlot = attrName === (name.name === 'slot' ? 'name' : 'slot');
-
-                    if (shouldValidateSlot && attr.value && attr.value.type !== 'Literal') {
-                        // tslint:disable-next-line:max-line-length
-                        throw scanner.error(`Slot name must be a string literal, expressions are not supported`, attr.value);
-                    }
-
-                    tag.attributes.push(attr);
+                    return tag.directives.push(directive);
                 }
+
+                // Validate some edge cases:
+                // * Currently, we do not support dynamic names in slots.
+                //   Make sure all slot names are literals
+                const attrName = isIdentifier(attr.name) ? attr.name.name : null;
+                const shouldValidateSlot = attrName === (name.name === 'slot' ? 'name' : 'slot');
+
+                if (shouldValidateSlot && attr.value && !isLiteral(attr.value)) {
+                    // tslint:disable-next-line:max-line-length
+                    throw scanner.error(`Slot name must be a string literal, expressions are not supported`, attr.value);
+                }
+
+                tag.attributes.push(attr);
             });
 
             return tag;
@@ -235,6 +246,36 @@ function isUnquoted(code: number): boolean {
 }
 
 /**
+ * If given attribute is a ref pointer, returns its name
+ */
+function getRef(attr: ENDAttribute, scanner: Scanner): string {
+    if (isIdentifier(attr.name)) {
+        const { name } = attr.name;
+        if (name === 'ref') {
+            // Parse `ref="..."` attribute
+            if (attr.value && isLiteral(attr.value)) {
+                return attr.value.value as string;
+            }
+
+            if (!attr.value) {
+                throw scanner.error('Ref attribute should not be empty', attr);
+            } else {
+                throw scanner.error('Ref attribute value must be a string', attr.value);
+            }
+        } else {
+            const m = name.match(/^ref:(.+)$/);
+            if (m) {
+                if (attr.value) {
+                    throw scanner.error('Shorthand ref should not have value', attr.value);
+                }
+
+                return m[1];
+            }
+        }
+    }
+}
+
+/**
  * If given attribute is a directive (has one of known prefixes), converts it to
  * directive token, returns `null` otherwise
  */
@@ -282,31 +323,12 @@ function expandExpression(expr: Program): Program | Literal {
 
 function castAttributeValue(value: string): LiteralValue {
     // Cast primitive values
-    if (/^\d+$/.test(value)) {
-        return Number(value);
+    const num = Number(value);
+    if (!isNaN(num)) {
+        return num;
     }
 
-    if (/^\d*\.\d+$/.test(value)) {
-        return parseFloat(value);
-    }
-
-    if (value === 'true') {
-        return true;
-    }
-
-    if (value === 'false') {
-        return false;
-    }
-
-    if (value === 'null') {
-        return null;
-    }
-
-    if (value === 'undefined') {
-        return undefined;
-    }
-
-    return value;
+    return value in attributeCast ? attributeCast[value] : value;
 }
 
 function createTag(scanner: Scanner,
