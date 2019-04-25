@@ -22,21 +22,22 @@ export interface Node {
 type JSNode = Node;
 
 export type ArgumentListElement = Expression | SpreadElement;
-export type ArrayExpressionElement = Expression | SpreadElement | null;
 export type ArrayPatternElement = Expression | null;
 export type Pattern = ArrayPattern | ObjectPattern | Identifier;
 export type Expression = ArrayExpression | ArrowFunctionExpression | AssignmentExpression
     | BinaryExpression | LogicalExpression | CallExpression | MemberExpression | ConditionalExpression
     | Identifier | Literal | ThisExpression | ObjectExpression | RegExpLiteral | SequenceExpression
     | UnaryExpression | UpdateExpression | FunctionDeclaration | ArrowFunctionExpression
-    | AssignmentPattern;
-export type FunctionParameter = Pattern;
+    | AssignmentPattern | SpreadElement | ENDGetter | ENDCaller | ENDFilter;
 export type Statement = ReturnStatement | EmptyStatement | ExpressionStatement;
 export type PropertyKey = Identifier | Literal;
 export type PropertyValue = Pattern | Literal;
 export type LiteralValue = boolean | number | string | null;
 
-export interface Function {
+export interface Function extends JSNode {
+    id: Identifier | null;
+    params: Pattern[];
+    body: Statement;
     generator?: boolean;
 }
 
@@ -70,14 +71,28 @@ export interface ThisExpression extends JSNode {
 export interface FunctionDeclaration extends Function {
     type: 'FunctionDeclaration';
     id: Identifier;
-    params: FunctionParameter[];
-    body: BlockStatement | Expression;
+}
+
+export interface ArrowFunctionExpression extends Function {
+    type: 'ArrowFunctionExpression';
+    expression?: boolean;
+    async?: boolean;
 }
 
 export interface AssignmentPattern extends JSNode {
     type: 'AssignmentPattern';
-    left: Expression;
+    left: Pattern;
     right: Expression;
+}
+
+export interface ObjectPattern extends JSNode {
+    type: 'ObjectPattern';
+    properties: Property[];
+}
+
+export interface ArrayPattern extends JSNode {
+    type: 'ArrayPattern';
+    elements: Pattern[];
 }
 
 export interface SpreadElement extends JSNode {
@@ -100,16 +115,6 @@ export interface ObjectExpression extends JSNode {
     properties: Property[];
 }
 
-export interface ObjectPattern extends JSNode {
-    type: 'ObjectPattern';
-    properties: Property[];
-}
-
-export interface ArrayPattern extends JSNode {
-    type: 'ArrayPattern';
-    elements: Pattern[];
-}
-
 export interface Property extends JSNode {
     type: 'Property';
     kind: 'init' | 'get' | 'set';
@@ -118,15 +123,6 @@ export interface Property extends JSNode {
     computed?: boolean;
     method?: boolean;
     shorthand?: boolean;
-}
-
-export interface ArrowFunctionExpression extends Function {
-    type: 'ArrowFunctionExpression';
-    id: Identifier | null;
-    params: FunctionParameter[];
-    body: BlockStatement | Expression;
-    expression?: boolean;
-    async?: boolean;
 }
 
 interface BaseExpression extends JSNode {
@@ -222,6 +218,13 @@ export type ENDPlainStatement = Literal | Program;
 export type ENDAttributeName = Identifier | Program;
 export type ENDBaseAttributeValue = Literal | Program;
 export type ENDAttributeValue = ENDBaseAttributeValue | ENDAttributeValueExpression | null;
+export type ENDGetterPathFragment = Expression | ENDGetter | ENDCaller | ENDFilter;
+export type ENDGetterPath = ENDGetterPathFragment[];
+
+export interface ENDGetterPrefix extends JSNode {
+    type: 'ENDGetterPrefix';
+    context: IdentifierContext;
+}
 
 export interface ENDProgram extends ENDNode {
     type: 'ENDProgram';
@@ -234,6 +237,26 @@ export interface ENDProgram extends ENDNode {
 export interface ENDTemplate extends ENDNode {
     type: 'ENDTemplate';
     body: ENDStatement[];
+}
+
+
+export interface ENDGetter extends JSNode {
+    type: 'ENDGetter';
+    path: ENDGetterPath;
+}
+
+export interface ENDCaller extends JSNode {
+    type: 'ENDCaller';
+    object: ENDGetterPathFragment | ENDGetterPrefix;
+    property: ENDGetterPathFragment | ENDGetterPrefix;
+    arguments: ArgumentListElement[];
+}
+
+export interface ENDFilter extends JSNode {
+    type: 'ENDFilter';
+    object: ENDGetterPathFragment;
+    expression: ArrowFunctionExpression;
+    multiple: boolean;
 }
 
 export interface ENDPartial extends ENDNode {

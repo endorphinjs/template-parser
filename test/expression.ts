@@ -1,9 +1,14 @@
-import { deepEqual } from 'assert';
+import { deepEqual, equal } from 'assert';
 import { parseJS, walk } from '../index';
 import { Identifier, Program, IdentifierContext } from '../src/ast';
+import generateJS from './assets/generate';
 
 interface IdContextMap {
     [id: string]: IdentifierContext | void;
+}
+
+function js(code: string): string {
+    return generateJS(parseJS(code)).trim();
 }
 
 function collectIdContext(ast: Program): IdContextMap {
@@ -40,5 +45,9 @@ describe('JS Parser', () => {
             bar: undefined,
             baz: undefined
         });
+    });
+
+    it.only('should upgrade to getters', () => {
+        equal(js('foo.bar + baz()'), '$get($host.props.foo, "bar") + $call($host.props, "baz");');
     });
 });

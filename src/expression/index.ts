@@ -1,11 +1,12 @@
 import { Parser, Position } from 'acorn';
 import endorphinParser from './acorn-plugin';
-import { Program, Identifier, Expression, Node, FunctionDeclaration, ArrowFunctionExpression, JSNode } from '../ast';
+import { Program, Identifier, Expression, Node, JSNode, Statement } from '../ast';
 import Scanner from '../scanner';
 import { walkFullAncestor as walk } from '../walk';
-import { eatPair, isIdentifier } from '../utils';
+import { eatPair, isIdentifier, isFunction } from '../utils';
 import { ENDSyntaxError } from '../syntax-error';
 import { JSParserOptions } from '../types';
+import { convert } from './getter';
 
 export const jsGlobals = new Set(['Math', 'String', 'Boolean', 'Object']);
 
@@ -86,6 +87,8 @@ export function parseJS(code: string, options: JSParserOptions = {}): Program {
                 node.context = options.helpers && options.helpers.includes(node.name)
                     ? 'helper' : 'property';
             }
+        } else if (!options.disableGetters) {
+            upgradeContent(node as Expression);
         }
     });
 
@@ -107,6 +110,47 @@ function isReserved(id: Identifier, ancestors: Expression[]): boolean {
     return false;
 }
 
+/**
+ * Upgrades contents of given node, if possible: converts `MemberExpression` and
+ * `CallExpression` children with getters and callers
+ */
+function upgradeContent(node: Expression | Statement): void {
+    switch (node.type) {
+        case 'AssignmentPattern':
+            node.right = convert(node.right);
+            break;
+        case 'AssignmentExpression':
+        case 'BinaryExpression':
+        case 'LogicalExpression':
+            node.left = convert(node.left);
+            node.right = convert(node.right);
+            break;
+        case 'SpreadElement':
+        case 'UpdateExpression':
+            node.argument = convert(node.argument);
+            break;
+        case 'ObjectExpression':
+            node.properties.forEach(prop => prop.value = convert(prop.value));
+            break;
+        case 'ConditionalExpression':
+            node.test = convert(node.test);
+            node.consequent = convert(node.consequent);
+            node.alternate = convert(node.alternate);
+            break;
+        case 'SequenceExpression':
+            node.expressions = node.expressions.map(convert);
+            break;
+        case 'ExpressionStatement':
+            node.expression = convert(node.expression);
+            break;
+        case 'ReturnStatement':
+            if (node.argument) {
+                node.argument = convert(node.argument);
+            }
+            break;
+    }
+}
+
 function offsetPos(pos: Position, offset: Position): Position {
     if (pos.line === 1) {
         pos.column += offset.column;
@@ -116,10 +160,6 @@ function offsetPos(pos: Position, offset: Position): Position {
         pos.offset += offset.offset;
     }
     return pos;
-}
-
-function isFunction(node: Expression): node is FunctionDeclaration | ArrowFunctionExpression {
-    return node.type === 'FunctionDeclaration' || node.type === 'ArrowFunctionExpression';
 }
 
 /**

@@ -22,6 +22,7 @@ export interface JSParserOptions {
     offset?: Position;
     url?: string;
     helpers?: string[];
+    disableGetters?: boolean;
 }
 
 /**

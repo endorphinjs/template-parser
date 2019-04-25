@@ -1,5 +1,5 @@
 import Scanner, { MatchFunction, SourceData } from './scanner';
-import { Identifier, LiteralValue, Literal, Node } from './ast';
+import { Identifier, LiteralValue, Literal, Node, Expression, FunctionDeclaration, ArrowFunctionExpression } from './ast';
 
 export const SINGLE_QUOTE = 39; // '
 export const DOUBLE_QUOTE = 34; // "
@@ -53,6 +53,13 @@ export function isIdentifier(node?: Node): node is Identifier {
  */
 export function isLiteral(node?: Node): node is Literal {
     return node && node.type === 'Literal';
+}
+
+/**
+ * Check if given node is a function
+ */
+export function isFunction(node: Expression): node is FunctionDeclaration | ArrowFunctionExpression {
+    return node.type === 'FunctionDeclaration' || node.type === 'ArrowFunctionExpression';
 }
 
 /**

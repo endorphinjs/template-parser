@@ -184,10 +184,23 @@ export const base: AstVisitors<object> = acornWalk.make({
     ENDInnerHTML(node: Ast.ENDInnerHTML, state, c) {
         c(node.value, state);
     },
+    ENDGetter(node: Ast.ENDGetter, state, c) {
+        walkArray(node.path, state, c);
+    },
+    ENDCaller(node: Ast.ENDCaller, state, c) {
+        c(node.object, state);
+        c(node.property, state);
+        walkArray(node.arguments, state, c);
+    },
+    ENDFilter(node: Ast.ENDFilter, state, c) {
+        c(node.object, state);
+        c(node.expression, state);
+    },
     ENDText: ignore,
     ENDImport: ignore,
     ENDStylesheet: ignore,
-    ENDScript: ignore
+    ENDScript: ignore,
+    ENDGetterPrefix: ignore
 } as AstVisitors<object>);
 
 function walkArray<T>(nodes: Ast.Node[], state: T, c: AstWalkerContinuation<T>) {
