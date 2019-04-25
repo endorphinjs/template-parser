@@ -28,7 +28,8 @@ export type Expression = ArrayExpression | ArrowFunctionExpression | AssignmentE
     | BinaryExpression | LogicalExpression | CallExpression | MemberExpression | ConditionalExpression
     | Identifier | Literal | ThisExpression | ObjectExpression | RegExpLiteral | SequenceExpression
     | UnaryExpression | UpdateExpression | FunctionDeclaration | ArrowFunctionExpression
-    | AssignmentPattern | SpreadElement | ENDGetter | ENDCaller | ENDFilter;
+    | AssignmentPattern | SpreadElement | TemplateLiteral | TaggedTemplateExpression
+    | ENDGetter | ENDCaller | ENDFilter;
 export type Statement = ReturnStatement | EmptyStatement | ExpressionStatement;
 export type PropertyKey = Identifier | Literal;
 export type PropertyValue = Pattern | Literal;
@@ -204,6 +205,27 @@ export interface ReturnStatement extends JSNode {
 export interface BlockStatement extends JSNode {
     type: 'BlockStatement';
     body: Statement[];
+}
+
+export interface TemplateLiteral extends JSNode {
+    type: 'TemplateLiteral';
+    quasis: TemplateElement[];
+    expressions: Expression[];
+}
+
+export interface TaggedTemplateExpression extends JSNode {
+    type: 'TaggedTemplateExpression';
+    tag: Expression;
+    quasi: TemplateLiteral;
+}
+
+export interface TemplateElement extends JSNode {
+    type: 'TemplateElement';
+    tail: boolean;
+    value: {
+        cooked: string;
+        raw: string;
+    };
 }
 
 // Endorphin template AST

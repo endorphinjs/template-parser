@@ -47,7 +47,19 @@ describe('JS Parser', () => {
         });
     });
 
-    it.only('should upgrade to getters', () => {
+    it('should upgrade to getters', () => {
+        equal(js('foo'), '$host.props.foo;');
+        equal(js('foo.bar'), '$get($host.props.foo, "bar");');
+        equal(js('foo.bar[1].baz'), '$get($host.props.foo, "bar", 1, "baz");');
+        equal(js('foo[bar]'), '$get($host.props.foo, $host.props.bar);');
+        equal(js('foo["bar"]'), '$get($host.props.foo, "bar");');
+        equal(js('foo.bar[baz.bam]'), '$get($host.props.foo, "bar", $get($host.props.baz, "bam"));');
+        equal(js('foo[a ? b : c]'), '$get($host.props.foo, $host.props.a ? $host.props.b : $host.props.c);');
+
         equal(js('foo.bar + baz()'), '$get($host.props.foo, "bar") + $call($host.props, "baz");');
+        equal(js('Math.round(foo)'), 'Math.round($host.props.foo);', 'Keep globals as-is');
+        equal(js('foo.bar[a => a > b]'), '$find($get($host.props.foo, "bar"), a => a > $host.props.b);', 'Rewrite filters');
+        equal(js('foo.bar[[a => a > #c]]'), '$filter($get($host.props.foo, "bar"), a => a > $host.state.c);', 'Rewrite filters (multiple)');
+        equal(js('`foo ${bar}`'), '`foo ${$host.props.bar}`;');
     });
 });

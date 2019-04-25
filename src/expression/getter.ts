@@ -39,7 +39,7 @@ export function createGetter(expr: MemberExpression): ENDGetter | MemberExpressi
                 break;
             }
 
-            if (isIdentifier(ctx.property)) {
+            if (isIdentifier(ctx.property) && !ctx.computed) {
                 result.path.unshift(idToLiteral(ctx.property));
             } else {
                 result.path.unshift(convert(ctx.property));

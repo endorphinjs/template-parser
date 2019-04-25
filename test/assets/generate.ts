@@ -30,7 +30,7 @@ const generator = Object.assign({}, baseGenerator, {
     },
     ENDFilter(node: ENDFilter, state: AstringState) {
         const { object, expression } = node;
-        state.write(node.multiple ? '$filterAll(' : '$filter(');
+        state.write(node.multiple ? '$filter(' : '$find(');
         this[object.type](object, state);
         state.write(', ');
         this[expression.type](expression, state);
