@@ -73,7 +73,5 @@ describe('Template parser', () => {
 
         assert.throws(() => parseTag('<div ref:foo=bar />'), 'Shorthand ref should not have value');
         assert.throws(() => parseTag('<div ref={bar} />'), 'Ref attribute value must be a string');
-
-
     });
 });

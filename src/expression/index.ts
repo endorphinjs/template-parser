@@ -1,21 +1,16 @@
 import { Parser, Position } from 'acorn';
 import endorphinParser from './acorn-plugin';
-import { Program, Identifier, Expression, Node } from '../ast';
+import { Program, Identifier, Expression, Node, FunctionDeclaration, ArrowFunctionExpression, JSNode } from '../ast';
 import Scanner from '../scanner';
 import { walkFullAncestor as walk } from '../walk';
 import { eatPair, isIdentifier } from '../utils';
 import { ENDSyntaxError } from '../syntax-error';
+import { JSParserOptions } from '../types';
 
 export const jsGlobals = new Set(['Math', 'String', 'Boolean', 'Object']);
 
 // @ts-ignore
 const JSParser = Parser.extend(endorphinParser);
-
-interface ParserOptions {
-    offset?: Position;
-    url?: string;
-    helpers?: string[];
-}
 
 export const EXPRESSION_START = 123; // {
 export const EXPRESSION_END = 125; // }
@@ -48,7 +43,7 @@ export default function expression(scanner: Scanner): Program {
  * @param scanner Code location inside parsed template
  * @param sourceFile Source file URL from which expression is parsed
  */
-export function parseJS(code: string, options: ParserOptions = {}): Program {
+export function parseJS(code: string, options: JSParserOptions = {}): Program {
     let ast: Program;
     try {
         ast = JSParser.parse(code, {
@@ -103,23 +98,13 @@ export function parseJS(code: string, options: ParserOptions = {}): Program {
 function isReserved(id: Identifier, ancestors: Expression[]): boolean {
     const last = ancestors[ancestors.length - 1];
 
-    if (!last) {
-        return false;
+    if (last) {
+        return isProperty(id, last)
+            || isAssignment(id, last)
+            || ancestors.some(expr => isFunctionArgument(id, expr));
     }
 
-    if (isFunctionArgument(id, last) || isProperty(id, last) || isAssignment(id, last)) {
-        return true;
-    }
-
-    // Check if given identifier is defined as function argument
-    for (const ancestor of ancestors) {
-        if (ancestor.type === 'FunctionDeclaration' || ancestor.type === 'ArrowFunctionExpression') {
-            const hasArg = ancestor.params.some(param => param.type === 'Identifier' && param.name === id.name);
-            if (hasArg) {
-                return true;
-            }
-        }
-    }
+    return false;
 }
 
 function offsetPos(pos: Position, offset: Position): Position {
@@ -133,12 +118,29 @@ function offsetPos(pos: Position, offset: Position): Position {
     return pos;
 }
 
+function isFunction(node: Expression): node is FunctionDeclaration | ArrowFunctionExpression {
+    return node.type === 'FunctionDeclaration' || node.type === 'ArrowFunctionExpression';
+}
+
 /**
  * Check if given identifier is a function argument
  */
 function isFunctionArgument(id: Identifier, expr: Expression): boolean {
-    return (expr.type === 'FunctionDeclaration' || expr.type === 'ArrowFunctionExpression')
-        && expr.params.includes(id);
+    return isFunction(expr) && expr.params.some(param => {
+        if (param.type === 'ObjectPattern') {
+            return param.properties.some(({ value }) => isSameIdentifier(id, value));
+        }
+
+        if (param.type === 'ArrayPattern') {
+            return param.elements.some(elem => isSameIdentifier(id, elem));
+        }
+
+        return isSameIdentifier(id, param);
+    });
+}
+
+function isSameIdentifier(id: Identifier, node: JSNode): boolean {
+    return isIdentifier(node) && node.name === id.name;
 }
 
 /**

@@ -1,4 +1,5 @@
-import { Node, Expression, ENDProgram } from './ast';
+import { Position } from 'acorn';
+import { Node, Expression, ENDProgram, Program } from './ast';
 
 export * from './ast';
 
@@ -17,12 +18,25 @@ export interface AstVisitorMap<T, U> {
     [nodeType: string]: AstVisitor<T, U>;
 }
 
+export interface JSParserOptions {
+    offset?: Position;
+    url?: string;
+    helpers?: string[];
+}
+
 /**
  * Parses given Endorphin template text into AST
  * @param text Template source
  * @param url Location of source, used for source mapping
  */
 export default function parse(code: string, url?: string): ENDProgram;
+
+/**
+ * Parses given Endorphin template text into AST
+ * @param text Template source
+ * @param url Location of source, used for source mapping
+ */
+export function parseJS(code: string, options?: JSParserOptions): Program;
 
 /**
  * A simple walk is one where you simply specify callbacks to be

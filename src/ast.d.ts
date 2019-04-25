@@ -23,19 +23,17 @@ type JSNode = Node;
 
 export type ArgumentListElement = Expression | SpreadElement;
 export type ArrayExpressionElement = Expression | SpreadElement | null;
-export type ArrayPatternElement = AssignmentPattern | BindingPattern | RestElement | null;
-export type BindingPattern = ArrayExpression | ObjectExpression | Identifier;
+export type ArrayPatternElement = Expression | null;
+export type Pattern = ArrayPattern | ObjectPattern | Identifier;
 export type Expression = ArrayExpression | ArrowFunctionExpression | AssignmentExpression
     | BinaryExpression | LogicalExpression | CallExpression | MemberExpression | ConditionalExpression
     | Identifier | Literal | ThisExpression | ObjectExpression | RegExpLiteral | SequenceExpression
     | UnaryExpression | UpdateExpression | FunctionDeclaration | ArrowFunctionExpression
     | AssignmentPattern;
-export type FunctionParameter = AssignmentPattern | BindingPattern;
-export type ObjectExpressionProperty = Property | SpreadElement;
-export type ObjectPatternProperty = Property | RestElement;
+export type FunctionParameter = Pattern;
 export type Statement = ReturnStatement | EmptyStatement | ExpressionStatement;
 export type PropertyKey = Identifier | Literal;
-export type PropertyValue = BindingPattern | Literal;
+export type PropertyValue = Pattern | Literal;
 export type LiteralValue = boolean | number | string | null;
 
 export interface Function {
@@ -54,12 +52,14 @@ export interface Literal extends JSNode {
     raw?: string;
 }
 
+export type IdentifierContext = 'property' | 'state' | 'variable' | 'store' | 'helper';
+
 export interface Identifier extends JSNode {
     type: 'Identifier';
     name: string;
 
     // Endorphin extension: identifier context
-    context?: 'property' | 'state' | 'variable' | 'store' | 'helper';
+    context?: IdentifierContext;
     raw?: string;
 }
 
@@ -87,7 +87,7 @@ export interface SpreadElement extends JSNode {
 
 export interface RestElement extends JSNode {
     type: 'RestElement';
-    argument: BindingPattern;
+    argument: Pattern;
 }
 
 export interface ArrayExpression extends JSNode {
@@ -98,6 +98,16 @@ export interface ArrayExpression extends JSNode {
 export interface ObjectExpression extends JSNode {
     type: 'ObjectExpression';
     properties: Property[];
+}
+
+export interface ObjectPattern extends JSNode {
+    type: 'ObjectPattern';
+    properties: Property[];
+}
+
+export interface ArrayPattern extends JSNode {
+    type: 'ArrayPattern';
+    elements: Pattern[];
 }
 
 export interface Property extends JSNode {
