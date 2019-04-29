@@ -318,7 +318,7 @@ export interface ENDAttributeValueExpression extends ENDNode {
 
 export interface ENDVariable extends ENDNode {
     type: 'ENDVariable';
-    name: ENDAttributeName;
+    name: string;
     value: ENDAttributeValue;
 }
 
