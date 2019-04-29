@@ -359,7 +359,7 @@ function validateDirective(dir: ENDDirective, scanner: Scanner): void {
 export function tagBody(scanner: Scanner, open: ParsedTag, consumeTag?: InnerStatement, body: ENDStatement[] = []): ENDStatement[] {
     if (open.selfClosing) {
         // Nothing to consume in self-closing tag
-        return;
+        return [];
     }
 
     const tagStack: ParsedTag[] = [open];

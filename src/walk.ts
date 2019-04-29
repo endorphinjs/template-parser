@@ -167,7 +167,6 @@ export const base: AstVisitors<object> = acornWalk.make({
         walkArray(node.body, state, c);
     },
     ENDPartialStatement(node: Ast.ENDPartialStatement, state, c) {
-        c(node.id, state);
         walkArray(node.params, state, c);
     },
     ENDVariableStatement(node: Ast.ENDVariableStatement, state, c) {

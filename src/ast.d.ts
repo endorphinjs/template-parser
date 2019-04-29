@@ -341,14 +341,14 @@ export interface ENDChooseCase extends ENDNode {
 
 export interface ENDForEachStatement extends ENDNode {
     type: 'ENDForEachStatement';
-    readonly body: ENDStatement[];
+    body: ENDStatement[];
     select: Program;
     key?: Program;
 }
 
 export interface ENDPartialStatement extends ENDNode {
     type: 'ENDPartialStatement';
-    id: Identifier;
+    id: string;
     params: ENDAttribute[];
 }
 

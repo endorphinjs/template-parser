@@ -1,7 +1,6 @@
 import Scanner from '../scanner';
 import { ENDPartialStatement, ParsedTag } from '../ast';
 import { getAttributes, tagName } from './utils';
-import { identifier } from '../utils';
 import { tagBody } from '../tag';
 
 const prefix = 'partial:';
@@ -12,16 +11,12 @@ const prefix = 'partial:';
  * @param openTag
  */
 export default function partialStatement(scanner: Scanner, openTag: ParsedTag): ENDPartialStatement {
-    const name = tagName(openTag).slice(prefix.length);
-    const start = openTag.name.loc.start.offset;
-    const id = identifier(name, scanner.loc(start + prefix.length, start + prefix.length + name.length));
-
     // Ignore partial content, if any
     tagBody(scanner, openTag);
 
     return {
         type: 'ENDPartialStatement',
-        id,
+        id: tagName(openTag).slice(prefix.length),
         params: getAttributes(openTag),
         ...scanner.loc(openTag.start)
     };
