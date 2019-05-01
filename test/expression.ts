@@ -8,7 +8,7 @@ interface IdContextMap {
 }
 
 function js(code: string): string {
-    return generateJS(parseJS(code)).trim();
+    return generateJS(parseJS(code, { helpers: ['emit'] })).trim();
 }
 
 function collectIdContext(ast: Program): IdContextMap {
@@ -61,5 +61,11 @@ describe('JS Parser', () => {
         equal(js('foo.bar[a => a > b]'), '$find($get($host.props.foo, "bar"), a => a > $host.props.b);', 'Rewrite filters');
         equal(js('foo.bar[[a => a > #c]]'), '$filter($get($host.props.foo, "bar"), a => a > $host.state.c);', 'Rewrite filters (multiple)');
         equal(js('`foo ${bar}`'), '`foo ${$host.props.bar}`;');
+    });
+
+    it('should upgrade to callers', () => {
+        equal(js('emit(foo)'), 'emit(this, $host.props.foo);');
+        equal(js('foo.bar()'), '$call($host.props.foo, "bar");');
+        equal(js('foo()'), '$call($host.props, "foo");');
     });
 });

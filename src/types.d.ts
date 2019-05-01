@@ -18,11 +18,14 @@ export interface AstVisitorMap<T, U> {
     [nodeType: string]: AstVisitor<T, U>;
 }
 
-export interface JSParserOptions {
-    offset?: Position;
-    url?: string;
+export interface ParserOptions {
     helpers?: string[];
     disableGetters?: boolean;
+}
+
+export interface JSParserOptions extends ParserOptions {
+    offset?: Position;
+    url?: string;
 }
 
 /**
@@ -30,7 +33,7 @@ export interface JSParserOptions {
  * @param text Template source
  * @param url Location of source, used for source mapping
  */
-export default function parse(code: string, url?: string): ENDProgram;
+export default function parse(code: string, url?: string, options?: ParserOptions): ENDProgram;
 
 /**
  * Parses given Endorphin template text into AST

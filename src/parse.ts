@@ -17,6 +17,7 @@ import {
     prefix, ignored, getControlName, InnerStatement, assertExpression,
     getAttrValueIfLiteral
 } from './elements/utils';
+import { ParserOptions } from './types';
 
 interface StatementMap {
     [name: string]: InnerStatement;
@@ -37,8 +38,8 @@ const statements: StatementMap = {
  * @param text Template source
  * @param url Location of source, used for source mapping
  */
-export default function parse(code: string, url?: string): ENDProgram {
-    const scanner = new Scanner(code, url);
+export default function parse(code: string, url?: string, options?: ParserOptions): ENDProgram {
+    const scanner = new Scanner(code, url, options);
     const program: ENDProgram = {
         type: 'ENDProgram',
         body: [],

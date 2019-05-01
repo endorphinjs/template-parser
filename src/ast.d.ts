@@ -38,7 +38,7 @@ export type LiteralValue = boolean | number | string | null;
 export interface Function extends JSNode {
     id: Identifier | null;
     params: Pattern[];
-    body: Statement;
+    body: Statement | BlockStatement;
     generator?: boolean;
 }
 
@@ -54,7 +54,7 @@ export interface Literal extends JSNode {
     raw?: string;
 }
 
-export type IdentifierContext = 'property' | 'state' | 'variable' | 'store' | 'helper';
+export type IdentifierContext = 'property' | 'state' | 'variable' | 'store' | 'helper' | 'definition';
 
 export interface Identifier extends JSNode {
     type: 'Identifier';

@@ -1,5 +1,6 @@
 import { ENDSyntaxError } from './syntax-error';
 import { Node, SourceLocation, Position } from './ast';
+import { ParserOptions } from './types';
 
 const LF = 10;
 const CR = 13;
@@ -34,9 +35,9 @@ export default class Scanner {
      * @param start Initial parsing location
      * @param end  Final parsing location in string
      */
-    constructor(readonly str: string, readonly url?: string | null, start: number = 0, end: number = str.length) {
-        this.pos = this.start = start;
-        this.end = end;
+    constructor(readonly str: string, readonly url?: string | null, readonly options?: ParserOptions) {
+        this.pos = this.start = 0;
+        this.end = str.length;
         this.lines = null;
     }
 
@@ -53,7 +54,9 @@ export default class Scanner {
      * stream end
      */
     limit(start?: number, end?: number): Scanner {
-        const clone = new Scanner(this.str, this.url, start, end);
+        const clone = new Scanner(this.str, this.url, this.options);
+        clone.start = clone.pos = start;
+        clone.end = end;
         clone.lines = this.lines;
         return clone;
     }

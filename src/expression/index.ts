@@ -32,6 +32,7 @@ export default function expression(scanner: Scanner): Program {
         const end = scanner.pos - 1;
 
         return parseJS(scanner.substring(begin, end), {
+            ...scanner.options,
             url: scanner.url,
             offset: scanner.sourceLocation(begin)
         });
