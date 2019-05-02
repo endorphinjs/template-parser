@@ -348,7 +348,7 @@ function createTag(scanner: Scanner,
 
 function validateDirective(dir: ENDDirective, scanner: Scanner): void {
     // Make sure event is expression
-    if (dir.prefix === 'on' && dir.value.type !== 'Program') {
+    if (dir.prefix === 'on' && dir.value && dir.value.type !== 'Program') {
         throw scanner.error(`Event handler must be expression`, dir.value);
     }
 }

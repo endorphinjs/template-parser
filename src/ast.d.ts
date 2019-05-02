@@ -38,7 +38,7 @@ export type LiteralValue = boolean | number | string | null;
 export interface Function extends JSNode {
     id: Identifier | null;
     params: Pattern[];
-    body: Statement | BlockStatement;
+    body: Expression | BlockStatement;
     generator?: boolean;
 }
 

@@ -149,6 +149,11 @@ function upgradeContent(node: Expression | Statement): void {
                 node.argument = convert(node.argument);
             }
             break;
+        case 'ArrowFunctionExpression':
+            if (node.expression) {
+                node.body = convert(node.body as Expression);
+            }
+            break;
     }
 }
 

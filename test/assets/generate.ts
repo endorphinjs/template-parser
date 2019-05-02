@@ -26,6 +26,16 @@ const generator = Object.assign({}, baseGenerator, {
         this[object.type](object, state);
         state.write(', ');
         this[property.type](property, state);
+        if (node.arguments && node.arguments.length) {
+            state.write(', [');
+            node.arguments.forEach((arg, i) => {
+                if (i !== 0) {
+                    state.write(', ');
+                }
+                this[arg.type](arg, state);
+            });
+            state.write(']');
+        }
         state.write(')');
     },
     ENDFilter(node: ENDFilter, state: AstringState) {

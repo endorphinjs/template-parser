@@ -67,5 +67,12 @@ describe('JS Parser', () => {
         equal(js('emit(foo)'), 'emit(this, $host.props.foo);');
         equal(js('foo.bar()'), '$call($host.props.foo, "bar");');
         equal(js('foo()'), '$call($host.props, "foo");');
+        equal(js('foo(bar)'), '$call($host.props, "foo", [$host.props.bar]);');
+    });
+
+    it('should upgrade nodes in function', () => {
+        // Detect `emit` is a helper and add reference to component
+        equal(js('e => emit(foo)'), '(e => emit(this, $host.props.foo));');
+        equal(js('e => foo(e.pageX)'), '(e => $call($host.props, "foo", [e.pageX]));');
     });
 });
