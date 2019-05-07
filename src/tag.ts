@@ -248,20 +248,22 @@ function isUnquoted(code: number): boolean {
 /**
  * If given attribute is a ref pointer, returns its name
  */
-function getRef(attr: ENDAttribute, scanner: Scanner): string {
+function getRef(attr: ENDAttribute, scanner: Scanner): string | Program {
     if (isIdentifier(attr.name)) {
         const { name } = attr.name;
         if (name === 'ref') {
             // Parse `ref="..."` attribute
-            if (attr.value && isLiteral(attr.value)) {
-                return attr.value.value as string;
+            if (attr.value) {
+                if (isLiteral(attr.value)) {
+                    return attr.value.value as string;
+                } else if (attr.value.type === 'Program') {
+                    return attr.value;
+                } else {
+                    throw scanner.error(`Unexpected value type "${attr.value.type}": ref value must be a string or expression`, attr);
+                }
             }
 
-            if (!attr.value) {
-                throw scanner.error('Ref attribute should not be empty', attr);
-            } else {
-                throw scanner.error('Ref attribute value must be a string', attr.value);
-            }
+            throw scanner.error('Ref attribute should not be empty', attr);
         } else {
             const m = name.match(/^ref:(.+)$/);
             if (m) {
