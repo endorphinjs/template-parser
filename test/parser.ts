@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as assert from 'assert';
-import parse from '../index';
+import parse from '../src/index';
 import { ENDElement } from '../src/ast';
 
 describe('Template parser', () => {

@@ -17,7 +17,11 @@ import {
     prefix, ignored, getControlName, InnerStatement, assertExpression,
     getAttrValueIfLiteral
 } from './elements/utils';
-import { ParserOptions } from './types';
+
+export interface ParserOptions {
+    helpers?: string[];
+    disableGetters?: boolean;
+}
 
 interface StatementMap {
     [name: string]: InnerStatement;

@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import compile from '../index';
+import compile from '../src/index';
 import { prefix } from '../src/elements/utils';
 
 describe('Error reporting', () => {

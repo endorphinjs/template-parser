@@ -1,7 +1,7 @@
 import typescript from 'rollup-plugin-typescript';
 
 export default {
-    input: './index.ts',
+    input: './src/index.ts',
     plugins: [typescript()],
     external: ['acorn', 'acorn-walk'],
     output: [{

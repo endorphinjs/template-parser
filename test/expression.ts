@@ -1,5 +1,5 @@
 import { deepEqual, equal } from 'assert';
-import { parseJS, walk } from '../index';
+import { parseJS, walk } from '../src/index';
 import { Identifier, Program, IdentifierContext } from '../src/ast';
 import generateJS from './assets/generate';
 

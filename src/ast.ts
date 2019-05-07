@@ -1,13 +1,13 @@
-interface Position {
+export interface Position {
     line: number;
     column: number;
-    offset: number
+    offset: number;
 }
 
 export interface SourceLocation {
-    start: Position
-    end: Position
-    source?: string | null
+    start: Position;
+    end: Position;
+    source?: string | null;
 }
 
 export interface Node {
@@ -19,7 +19,7 @@ export interface Node {
 }
 
 // AST types for JavaScript-like expressions
-type JSNode = Node;
+export type JSNode = Node;
 
 export type ArgumentListElement = Expression | SpreadElement;
 export type ArrayPatternElement = Expression | null;
@@ -229,7 +229,7 @@ export interface TemplateElement extends JSNode {
 }
 
 // Endorphin template AST
-type ENDNode = Node;
+export type ENDNode = Node;
 
 export type ENDStatement = ENDElement | ENDInnerHTML | ENDPlainStatement
     | ENDAttributeStatement | ENDAddClassStatement | ENDVariableStatement
@@ -260,7 +260,6 @@ export interface ENDTemplate extends ENDNode {
     type: 'ENDTemplate';
     body: ENDStatement[];
 }
-
 
 export interface ENDGetter extends JSNode {
     type: 'ENDGetter';

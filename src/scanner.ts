@@ -1,6 +1,6 @@
 import { ENDSyntaxError } from './syntax-error';
 import { Node, SourceLocation, Position } from './ast';
-import { ParserOptions } from './types';
+import { ParserOptions } from './parse';
 
 const LF = 10;
 const CR = 13;

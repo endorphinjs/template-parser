@@ -1,9 +1,20 @@
 import * as acornWalk from 'acorn-walk';
 import * as Ast from './ast';
-import {
-    AstWalker, AstVisitorMap, AstVisitorCallback, AstVisitors,
-    AstAncestorVisitorCallback, AstTestFn, AstWalkerContinuation
-} from './types';
+
+export type AstWalker<T> = (node: Ast.Node, state: T, c: AstWalkerContinuation<T>) => void;
+export type AstWalkerContinuation<T> = (node: Ast.Node, state: T, type?: string) => void;
+export type AstVisitor<T, U> = (node: Ast.Node, state: T, addon: U) => void;
+export type AstVisitorCallback<T> = (node: Ast.Node, state: T, type: string) => void;
+export type AstAncestorVisitorCallback<T> = (node: Ast.Node, state: T, ancestors: Ast.Node[], type: string) => void;
+export type AstTestFn = (type: string) => boolean;
+
+export interface AstVisitors<T> {
+    [nodeType: string]: AstWalker<T>;
+}
+
+export interface AstVisitorMap<T, U> {
+    [nodeType: string]: AstVisitor<T, U>;
+}
 
 // tslint:disable-next-line:no-empty
 const ignore: AstWalker<object> = () => {};

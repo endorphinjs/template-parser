@@ -5,10 +5,15 @@ import Scanner from '../scanner';
 import { walkFullAncestor as walk } from '../walk';
 import { eatPair, isIdentifier, isFunction } from '../utils';
 import { ENDSyntaxError } from '../syntax-error';
-import { JSParserOptions } from '../types';
 import { convert } from './getter';
+import { ParserOptions } from '../parse';
 
 export const jsGlobals = new Set(['Math', 'String', 'Boolean', 'Object']);
+
+export interface JSParserOptions extends ParserOptions {
+    offset?: Position;
+    url?: string;
+}
 
 // @ts-ignore
 const JSParser = Parser.extend(endorphinParser);
