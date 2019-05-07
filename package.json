@@ -7,7 +7,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "rollup -c && npm run types",
-    "lint": "tslint ./index.ts ./src/**/*.ts",
+    "lint": "tslint ./src/**/*.ts",
     "test": "mocha",
     "types": "tsc -p ./tsconfig.declaration.json",
     "clean": "rm -rf ./dist",
